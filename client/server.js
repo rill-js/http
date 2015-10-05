@@ -3,6 +3,7 @@ var EventEmitter = require("events").EventEmitter;
 var formJSON     = require("@rill/form-json");
 var Request      = require("./request.js");
 var Response     = require("./response.js");
+var util         = require("./util.js");
 var reg          = {
 	hash: /#.+$/,
 	rel:  /(?:^|\s+)external(?:\s+|$)/
@@ -142,7 +143,7 @@ function onSubmit (e) {
 
 	if (method === "GET") {
 		var parsed = URL.parse(url);
-		parsed.query = data.body;
+		parsed.query = util.flattenQuery(data.body);
 		this.navigate(URL.format(parsed));
 	} else {
 		this.navigate({
