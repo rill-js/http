@@ -1,4 +1,5 @@
 var assert = require("assert");
+var URL    = require("url");
 var http   = require("../client");
 
 var _uid = 0;
@@ -148,7 +149,7 @@ describe("HTTP", function () {
 			res.end();
 		}).listen();
 		afterEach(function () {
-			formData                = 
+			formData                =
 			formURL                 = undefined;
 			document.body.innerHTML = "";
 		});
@@ -179,7 +180,8 @@ describe("HTTP", function () {
 			el.appendChild(submit);
 
 			afterSubmit(el, function () {
-				assert.ok(formURL.indexOf(JSON.stringify({ test: "1" })) !== -1);
+				var query = URL.parse(formURL, true).query;
+				assert.equal(query.test, 1);
 				done();
 			});
 

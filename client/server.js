@@ -1,6 +1,6 @@
-var resolve      = require("url").resolve;
+var URL          = require("url");
 var EventEmitter = require("events").EventEmitter;
-var serialize    = require("@rill/form-json");
+var formJSON     = require("@rill/form-json");
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var reg          = {
@@ -133,22 +133,23 @@ function onSubmit (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var url = resolve(location.origin, el.action);
+	var url = URL.resolve(location.origin, el.action);
 	// Ignore links that don't share a protocol or host with the browsers.
 	if (url.indexOf(location.origin) !== 0) return;
 
-	var serialized = serialize(el);
+	var data   = formJSON(el);
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
-	
+
 	if (method === "GET") {
-		// Ignore qs when using GET (consistent with browsers).
-		this.navigate(url.split("?")[0] + "?" + JSON.stringify(serialized.body));
+		var parsed = URL.parse(url);
+		parsed.query = data.body;
+		this.navigate(URL.format(parsed));
 	} else {
 		this.navigate({
-			url: url,
+			url:    url,
 			method: method,
-			body: serialized.body,
-			files: serialized.files
+			body:   data.body,
+			files:  data.files
 		})
 	}
 
@@ -189,7 +190,7 @@ function onClick (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var url = resolve(location.origin, el.href);
+	var url = URL.resolve(location.origin, el.href);
 	// Ignore links that don't share a protocol or host with the browsers.
 	if (url.indexOf(location.origin) !== 0) return;
 
