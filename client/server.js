@@ -61,11 +61,11 @@ proto.close = function close () {
  * @param {Boolean} replaceState
  * @api private
  */
-proto.navigate = function navigate (opts, replaceState) {
-	if (typeof opts === "string") opts = { url: opts };
+proto.navigate = function navigate (req, replaceState) {
+	if (typeof req === "string") req = new Request({ url: req });
+	else if (!(req instanceof Request)) req = new Request(req);
 
 	var self = this;
-	var req  = new Request(opts);
 	var res  = new Response();
 
 	res.once("finish", function onEnd() {

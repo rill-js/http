@@ -2,7 +2,8 @@ var EventEmitter = require("events").EventEmitter;
 var noop         = function () {};
 
 function ServerResponse (opts) {
-	this.headers = {};
+	this.headers  = {};
+	this.trailers = {};
 }
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype);
 
