@@ -69,6 +69,7 @@ proto.navigate = function navigate (opts, replaceState) {
 	var res  = new Response();
 
 	res.once("finish", function onEnd() {
+		req.complete = true;
 		req.emit("finsish");
 		// Check to see if we should update the url.
 		if (req.method !== "GET" || res.headers["location"]) return;

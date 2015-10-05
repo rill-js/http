@@ -1,15 +1,14 @@
 var EventEmitter = require("events").EventEmitter;
 var noop         = function () {};
 
-function Response (opts) {
+function ServerResponse (opts) {
 	this.headers = {};
 }
-var proto = Response.prototype = Object.create(EventEmitter.prototype);
+var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype);
 
 // Defaults.
-proto.status        = 
-proto.statusCode    = 404;
-proto.statusMessage = "Not Found";
+proto.statusCode    = null;
+proto.statusMessage = null;
 proto.sendDate      = true;
 proto.finished      = false;
 
@@ -33,4 +32,4 @@ proto.end = function end () {
 	this.emit("finish");
 };
 
-module.exports = Response;
+module.exports = ServerResponse;

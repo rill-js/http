@@ -1,7 +1,7 @@
 var EventEmitter = require("events").EventEmitter;
 var referrer     = document.referrer;
 
-function Request (opts) {
+function IncomingMessage (opts) {
 	this.url                        = opts.url;
 	this.method                     = opts.method || "GET";
 	this.headers                    = opts.headers || {};
@@ -18,6 +18,9 @@ function Request (opts) {
 	this.files = opts.files;
 	referrer = opts.url;
 }
-var proto = Request.prototype = Object.create(EventEmitter.prototype);
+var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype);
 
-module.exports = Request;
+// Defaults
+proto.complete = false;
+
+module.exports = IncomingMessage;
