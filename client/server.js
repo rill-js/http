@@ -13,9 +13,10 @@ var reg          = {
  *
  * @param {Function} handle - the handle for a request.
  */
-function Server (handle) {
+function Server (handler) {
 	this._started = false;
-	this._handle  = handle;
+	this._handler = handler;
+	this._handle  = this;
 }
 var proto = Server.prototype = Object.create(EventEmitter.prototype);
 
@@ -96,7 +97,7 @@ proto.navigate = function navigate (opts, replaceState) {
 	});
 
 	this.emit("request", req, res);
-	this._handle(req, res);
+	this._handler(req, res);
 	return this;
 };
 
@@ -132,7 +133,7 @@ function onSubmit (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var parsed = parseURL(url, this);
+	var parsed = parseURL(url);
 	// Ignore links that don't share a protocol with the browsers.
 	if (location.protocol.indexOf(parsed.protocol) === -1) return;
 	// Ignore links that don't share a host with the browsers.
@@ -190,7 +191,7 @@ function onClick (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var parsed = parseURL(url, this);
+	var parsed = parseURL(url);
 	// Ignore links that don't share a protocol with the browsers.
 	if (location.protocol.indexOf(parsed.protocol) === -1) return;
 	// Ignore links that don't share a host with the browsers.
