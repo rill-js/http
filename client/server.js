@@ -1,6 +1,6 @@
-var EventEmitter = require("events");
+var resolve      = require("url").resolve;
+var EventEmitter = require("events").EventEmitter;
 var serialize    = require("@rill/form-json");
-var parseURL     = require("@rill/parse-url");
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var reg          = {
@@ -126,7 +126,6 @@ function onSubmit (e) {
 	// Ignore clicks from linkless elements
 	if (!el.action) return;
 
-	var url = el.action;
 	// Ignore the click if the element has a target.
 	if (el.target && el.target !== "_self") return;
 	// Ignore 'rel="external"' links.
@@ -134,11 +133,9 @@ function onSubmit (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var parsed = parseURL(url);
-	// Ignore links that don't share a protocol with the browsers.
-	if (location.protocol.indexOf(parsed.protocol) === -1) return;
-	// Ignore links that don't share a host with the browsers.
-	if (location.host !== parsed.host) return;
+	var url = resolve(location.origin, el.action);
+	// Ignore links that don't share a protocol or host with the browsers.
+	if (url.indexOf(location.origin) !== 0) return;
 
 	var serialized = serialize(el);
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
@@ -192,11 +189,9 @@ function onClick (e) {
 
 	// Use a url parser to parse URLs instead of relying on the browser
 	// to do it for us (because IE).
-	var parsed = parseURL(url);
-	// Ignore links that don't share a protocol with the browsers.
-	if (location.protocol.indexOf(parsed.protocol) === -1) return;
-	// Ignore links that don't share a host with the browsers.
-	if (location.host !== parsed.host) return;
+	var url = resolve(location.origin, el.href);
+	// Ignore links that don't share a protocol or host with the browsers.
+	if (url.indexOf(location.origin) !== 0) return;
 
 	this.navigate(url);
 	event.preventDefault();
