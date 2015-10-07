@@ -4,6 +4,7 @@ var formJSON     = require("@rill/form-json");
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var util         = require("./util.js");
+var location     = window.history.location || window.location;
 var reg          = {
 	hash:          /#(.+)$/,
 	rel:           /(?:^|\s+)external(?:\s+|$)/,
