@@ -7,7 +7,8 @@ var util         = require("./util.js");
 var reg          = {
 	hash:          /#(.+)$/,
 	rel:           /(?:^|\s+)external(?:\s+|$)/,
-	cookieOptions: /(domain|path|expires|max-age|httponly|secure)( *= *[^;]*)?/g
+	cookieOptions: /(domain|path|expires|max-age|httponly|secure)( *= *[^;]*)?/g,
+	cookieValues:  / *; */
 };
 
 /**
@@ -85,16 +86,14 @@ proto.navigate = function navigate (req, replaceState) {
 			var cookies = res.getHeader("set-cookie");
 			// In the browser each cookie required options, so we extract them.
 			var options = (cookies.match(reg.cookieOptions) || []).join("; ");
+			if (options) options = "; " + options;
 
 			// We must set each cookie individually if there are multiple.
 			cookies
 				.replace(reg.cookieOptions, "")
-				.split(";")
-				.forEach(function (cookie) {
-					if (cookie.trim()) {
-						document.cookie = cookie + "; " + options;
-					}
-				});
+				.split(reg.cookieValues)
+				.filter(Boolean) // Ensure we don't have any empty cookies.
+				.forEach(function (cookie) { document.cookie = cookie + options; });
 		}
 
 		// Check to see if a refresh was requested.
@@ -104,7 +103,7 @@ proto.navigate = function navigate (req, replaceState) {
 			var redirectURL = parts[1];
 			// This handles refresh headers similar to browsers.
 			this._pending_refresh = setTimeout(
-				this.navigate.bind(self, redirectURL, true),
+				this.navigate.bind(this, redirectURL, true),
 				timeout
 			);
 		}
