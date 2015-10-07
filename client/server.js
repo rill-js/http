@@ -15,9 +15,14 @@ var reg          = {
  * @param {Function} handle - the handle for a request.
  */
 function Server (handler) {
-	this._started = false;
-	this._handler = handler;
 	this._handle  = this;
+	this._started = false;
+	if (handler) {
+		if (typeof handler !== "function") {
+			throw new TypeError("listener must be a function");
+		}
+		this.on("request", handler);
+	}
 }
 var proto = Server.prototype = Object.create(EventEmitter.prototype);
 
@@ -99,7 +104,6 @@ proto.navigate = function navigate (req, replaceState) {
 	});
 
 	this.emit("request", req, res);
-	this._handler(req, res);
 	return this;
 };
 
