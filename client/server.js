@@ -73,8 +73,7 @@ proto.navigate = function navigate (req, replaceState) {
 	if (typeof req === "string") req = new Request({ url: req });
 	else if (!(req instanceof Request)) req = new Request(req);
 
-	var self = this;
-	var res  = new Response();
+	var res = new Response();
 
 	res.once("finish", function onEnd() {
 		req.complete = true;
@@ -105,7 +104,7 @@ proto.navigate = function navigate (req, replaceState) {
 			var redirectURL = parts[1];
 			// This handles refresh headers similar to browsers.
 			this._pending_refresh = setTimeout(
-				this.navigate.bind(this, redirectURL, true),
+				this.navigate.bind(self, redirectURL, true),
 				timeout
 			);
 		}
@@ -134,19 +133,19 @@ proto.navigate = function navigate (req, replaceState) {
 					behavior: "smooth"
 				});
 			}
-		} else if (self._started) {
+		} else if (this._started) {
 			window.scrollTo(0, 0);
 		}
 
 		// Started allows for the browser to handle the initial scroll position.
-		self._started = true;
+		this._started = true;
 
 		// Update the href in the browser.
 		history[replaceState
 			? "replaceState"
 			: "pushState"
 		](null, "", req.url);
-	});
+	}.bind(this));
 
 	this.emit("request", req, res);
 	return this;
