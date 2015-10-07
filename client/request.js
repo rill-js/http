@@ -5,6 +5,7 @@ function IncomingMessage (opts) {
 	this.url                        = opts.url;
 	this.method                     = opts.method || "GET";
 	this.headers                    = opts.headers || {};
+	this.headers["date"]            = (new Date()).toUTCString();
 	this.headers["host"]            = location.host;
 	this.headers["cookie"]          = document.cookie;
 	this.headers["user-agent"]      = navigator.userAgent;
@@ -24,7 +25,7 @@ var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype);
 // Defaults
 proto.httpVersionMajor = 1;
 proto.httpVersionMinor = 1;
-proto.httpVersion      = "1.1";
+proto.httpVersion      = proto.httpVersionMajor + "." + proto.httpVersionMinor;
 proto.complete         = false;
 
 

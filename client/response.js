@@ -3,8 +3,7 @@ var STATUS_CODES = require("./constants/status-codes.json");
 var noop         = function () {};
 
 function ServerResponse (opts) {
-	this.headers  = {};
-	this.trailers = {};
+	this._headers  = {};
 }
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype);
 
@@ -18,22 +17,77 @@ proto.finished      = false;
  * Make some methods noops.
  */
 proto.write         = 
-proto.writeHead     = 
 proto.writeContinue = 
-proto.setTimeout    = 
-proto.setHeader     = 
-proto.getHeader     = 
-proto.removeHeader  = 
+proto.setTimeout    =
 proto.addTrailers   = noop;
+
+/**
+ * Write status, status message and headers the same as node js.
+ */
+proto.writeHead = function writeHead (statusCode, statusMessage, headers) {
+	if (this.finished) {
+		throw new Error("Response has already been sent.");
+	}
+
+	this.statusCode = statusCode;
+	if (statusMessage) {
+		if (typeof statusMessage === "object") {
+			headers = statusMessage;
+		} else {
+			this.statusMessage = statusMessage;
+		}
+	}
+
+	if (typeof headers === "object") {
+		for (var key in headers) {
+			this.setHeader(key, headers[key]);
+		}
+	}
+};
+
+/**
+ * Get a header the same as node js.
+ */
+proto.getHeader = function getHeader (header) {
+	return this._headers[header.toLowerCase()];
+};
+
+/**
+ * Remove a header the same as node js.
+ */
+proto.removeHeader = function removeHeader (header) {
+	delete this._headers[header.toLowerCase()];
+};
+
+
+/**
+ * Write a header the same as node js.
+ */
+proto.setHeader = function setHeader (header, value) {
+	header = header.toLowerCase();
+
+	// Support both array and string headers.
+	if (value && value.constructor === Array) value = value.join("; ");
+	else value = String(value);
+
+	this._headers[header] = value;
+};
 
 /**
  * Handle event ending the same as node js.
  */
 proto.end = function end () {
+	if (this.finished) {
+		throw new Error("Response has already been sent.");
+	}
+
 	if (this.statusMessage == null) {
 		this.statusMessage = STATUS_CODES[this.statusCode];
 	}
-	this.finished = true;
+	this._headers["date"]   = (new Date()).toUTCString();
+	this._headers["status"] = this.statusCode;
+	this.headersSent        = true;
+	this.finished           = true;
 	this.emit("finish");
 };
 

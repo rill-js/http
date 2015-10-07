@@ -5,8 +5,9 @@ var Request      = require("./request.js");
 var Response     = require("./response.js");
 var util         = require("./util.js");
 var reg          = {
-	hash: /#.+$/,
-	rel:  /(?:^|\s+)external(?:\s+|$)/
+	hash:          /#(.+)$/,
+	rel:           /(?:^|\s+)external(?:\s+|$)/,
+	cookieOptions: /(domain|path|expires|max-age|httponly|secure)( *= *[^;]*)?/g
 };
 
 /**
@@ -15,8 +16,9 @@ var reg          = {
  * @param {Function} handle - the handle for a request.
  */
 function Server (handler) {
-	this._handle  = this;
-	this._started = false;
+	this._handle          = this;
+	this._started         = false;
+	this._pending_refresh = null;
 	if (handler) {
 		if (typeof handler !== "function") {
 			throw new TypeError("listener must be a function");
@@ -77,26 +79,69 @@ proto.navigate = function navigate (req, replaceState) {
 	res.once("finish", function onEnd() {
 		req.complete = true;
 		req.emit("finsish");
-		// Check to see if we should update the url.
-		if (req.method !== "GET" || res.headers["location"]) return;
+		clearTimeout(this._pending_refresh);
 
-		var hash = req.url.match(reg.hash);
-		hash     = hash ? hash[0] : null;
+		// Check if we should set some cookies.
+		if (res.getHeader("set-cookie")) {
+			var cookies = res.getHeader("set-cookie");
+			// In the browser each cookie required options, so we extract them.
+			var options = (cookies.match(reg.cookieOptions) || []).join("; ");
+
+			// We must set each cookie individually if there are multiple.
+			cookies
+				.replace(reg.cookieOptions, "")
+				.split(";")
+				.forEach(function (cookie) {
+					if (cookie.trim()) {
+						document.cookie = cookie + "; " + options;
+					}
+				});
+		}
+
+		// Check to see if a refresh was requested.
+		if (res.getHeader("refresh")) {
+			var parts       = res.getHeader("refresh").split("; url=");
+			var timeout     = parseInt(parts[0]) * 1000;
+			var redirectURL = parts[1];
+			// This handles refresh headers similar to browsers.
+			this._pending_refresh = setTimeout(
+				this.navigate.bind(this, redirectURL, true),
+				timeout
+			);
+		}
+
+		// Check to see if we should redirect.
+		if (res.getHeader("location")) {
+			this.navigate(res.getHeader("location"));
+			return;
+		}
+
+		// Check to see if we should update the url.
+		if (req.method !== "GET") return;
 
 		/*
 		 * When navigating a user will be brought to the top of the page.
 		 * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
 		 * This is similar to how browsers handle page transitions natively.
 		 */
+		var hash = req.url.match(reg.hash);
+
 		if (hash != null) {
-			target = document.getElementById(hash.slice(1));
-			if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
+			target = document.getElementById(hash[1]);
+			if (target) {
+				target.scrollIntoView({
+					block: "start",
+					behavior: "smooth"
+				});
+			}
 		} else if (self._started) {
 			window.scrollTo(0, 0);
 		}
 
+		// Started allows for the browser to handle the initial scroll position.
 		self._started = true;
 
+		// Update the href in the browser.
 		history[replaceState
 			? "replaceState"
 			: "pushState"
@@ -154,7 +199,10 @@ function onSubmit (e) {
 			url:    url,
 			method: method,
 			body:   data.body,
-			files:  data.files
+			files:  data.files,
+			headers: {
+				"content-type": el.enctype
+			}
 		})
 	}
 
@@ -175,7 +223,7 @@ function onClick (e) {
 		event.shiftKey ||
 		event.button !== 0) return;
 
-	// Get the <form> element.
+	// Get the <a> element.
 	var el = event.target;
 	while (el != null && el.nodeName !== "A") el = el.parentNode;
 
