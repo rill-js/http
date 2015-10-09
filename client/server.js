@@ -1,9 +1,9 @@
 var URL          = require("url");
+var flat         = require("q-flat");
 var EventEmitter = require("events").EventEmitter;
 var formJSON     = require("@rill/form-json");
 var Request      = require("./request.js");
 var Response     = require("./response.js");
-var util         = require("./util.js");
 var location     = window.history.location || window.location;
 var reg          = {
 	hash:          /#(.+)$/,
@@ -191,7 +191,7 @@ function onSubmit (e) {
 
 	if (method === "GET") {
 		var parsed = URL.parse(url);
-		parsed.query = util.flattenQuery(data.body);
+		parsed.query = flat(data.body);
 		this.navigate(URL.format(parsed));
 	} else {
 		this.navigate({

@@ -1,6 +1,6 @@
 {
   "name": "@rill/http",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Isomorphic http module with createServer support.",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "main": "server/index.js",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@rill/form-json": "^0.3.3",
+    "q-flat": "^0.1.0",
     "q-set": "^0.1.5"
   },
   "devDependencies": {
