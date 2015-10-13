@@ -1,13 +1,11 @@
 var URL          = require("url");
-var flat         = require("q-flat");
 var EventEmitter = require("events").EventEmitter;
-var formJSON     = require("@rill/form-json");
+var handlers     = require("./handlers")
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var location     = window.history.location || window.location;
 var reg          = {
 	hash:          /#(.+)$/,
-	rel:           /(?:^|\s+)external(?:\s+|$)/,
 	cookieOptions: /(domain|path|expires|max-age|httponly|secure)( *= *[^;]*)?/g,
 	cookieValues:  / *; */
 };
@@ -35,9 +33,9 @@ var proto = Server.prototype = Object.create(EventEmitter.prototype);
  */
 proto.listen = function listen () {
 	var cb            = arguments[arguments.length - 1];
-	this._onURLChange = onURLChange.bind(this);
-	this._onSubmit    = onSubmit.bind(this);
-	this._onClick     = onClick.bind(this);
+	this._onURLChange = handlers.onURLChange.bind(this);
+	this._onSubmit    = handlers.onSubmit.bind(this);
+	this._onClick     = handlers.onClick.bind(this);
 
 	window.addEventListener("DOMContentLoaded", this._onURLChange);
 	window.addEventListener("popstate", this._onURLChange);
@@ -72,9 +70,16 @@ proto.close = function close () {
  * @api private
  */
 proto.navigate = function navigate (req, replaceState) {
-	if (typeof req === "string") req = new Request({ url: req });
-	else if (!(req instanceof Request)) req = new Request(req);
+	// Allow navigation with url only.
+	if (typeof req === "string") req = { url: req };
 
+	// Ignore links that don't share a protocol or host with the browsers.
+	var parsed = URL.parse(URL.resolve(location.origin, req.url));
+	if (parsed.host !== location.host) return false;
+	if (parsed.protocol !== location.protocol) return false;
+
+	req.url = parsed.path;
+	var req = new Request(req);
 	var res = new Response();
 
 	res.once("finish", function onEnd() {
@@ -149,105 +154,6 @@ proto.navigate = function navigate (req, replaceState) {
 
 	this.emit("request", req, res);
 	return this;
-};
-
-/*
- * Handle an event that changed the url (popstate or page load).
- *
- * @param {Object} event
- */
-function onURLChange (e) {
-	this.navigate(location.href, true);
-};
-
-/*
- * Handle intercepting forms to update the url.
- *
- * @param {Object} event
- */
-function onSubmit (e) {
-	// Ignore canceled events.
-	if (e.defaultPrevented) return;
-
-	// Get the <form> element.
-	var el = event.target;
-
-	// Ignore clicks from linkless elements
-	if (!el.action) return;
-
-	// Ignore the click if the element has a target.
-	if (el.target && el.target !== "_self") return;
-	// Ignore 'rel="external"' links.
-	if (el.hasAttribute("rel") && reg.rel.test(el.getAttribute("rel"))) return;
-
-	// Use a url parser to parse URLs instead of relying on the browser
-	// to do it for us (because IE).
-	var url = URL.resolve(location.origin, el.action);
-	// Ignore links that don't share a protocol or host with the browsers.
-	if (url.indexOf(location.origin) !== 0) return;
-
-	var data   = formJSON(el);
-	var method = (el.getAttribute("method") || el.method).toUpperCase();
-
-	if (method === "GET") {
-		var parsed = URL.parse(url);
-		parsed.query = flat(data.body);
-		this.navigate(URL.format(parsed));
-	} else {
-		this.navigate({
-			url:    url,
-			method: method,
-			body:   data.body,
-			files:  data.files,
-			headers: {
-				"content-type": el.enctype
-			}
-		})
-	}
-
-	if (!el.hasAttribute("data-noreset")) el.reset();
-	event.preventDefault();
-};
-
-/*
- * Handle intercepting link clicks to update the url.
- *
- * @param {Object} event
- */
-function onClick (e) {
-	// Ignore canceled events, modified clicks, and right clicks.
-	if (event.defaultPrevented ||
-		event.metaKey ||
-		event.ctrlKey ||
-		event.shiftKey ||
-		event.button !== 0) return;
-
-	// Get the <a> element.
-	var el = event.target;
-	while (el != null && el.nodeName !== "A") el = el.parentNode;
-
-	// Ignore if we couldn't find a link.
-	if (!el) return;
-
-	// Ignore clicks from linkless elements
-	if (!el.href) return;
-
-	var url = el.href;
-	// Ignore downloadable links.
-	if (el.download) return;
-	// Ignore the click if the element has a target.
-	if (el.target && el.target !== "_self") return;
-	// Ignore 'rel="external"' links.
-	if (el.rel && reg.rel.test(el.rel)) return;
-
-	// Use a url parser to parse URLs instead of relying on the browser
-	// to do it for us (because IE).
-	var url = URL.resolve(location.origin, el.href);
-	// Ignore links that don't share a protocol or host with the browsers.
-	if (url.indexOf(location.origin) !== 0) return;
-
-	this.navigate(url);
-	event.preventDefault();
 };
 
 module.exports = Server;

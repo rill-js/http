@@ -1,3 +1,4 @@
+var URL          = require("url");
 var EventEmitter = require("events").EventEmitter;
 var location     = window.history.location || window.location;
 var referrer     = document.referrer;
