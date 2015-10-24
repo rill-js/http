@@ -59,24 +59,18 @@ proto.removeHeader = function removeHeader (header) {
 	delete this._headers[header.toLowerCase()];
 };
 
-
 /**
  * Write a header the same as node js.
  */
 proto.setHeader = function setHeader (header, value) {
-	header = header.toLowerCase();
-
-	// Support both array and string headers.
-	if (value && value.constructor === Array) value = value.join("; ");
-	else value = String(value);
-
-	this._headers[header] = value;
+	this._headers[header.toLowerCase()] = value;
 };
 
 /**
  * Handle event ending the same as node js.
  */
 proto.end = function end () {
+	this.emit("end");
 	if (this.finished) {
 		throw new Error("Response has already been sent.");
 	}
@@ -84,7 +78,11 @@ proto.end = function end () {
 	if (this.statusMessage == null) {
 		this.statusMessage = STATUS_CODES[this.statusCode];
 	}
-	this._headers["date"]   = (new Date()).toUTCString();
+
+	if (this.sendDate) {
+		this._headers["date"]   = (new Date()).toUTCString();
+	}
+
 	this._headers["status"] = this.statusCode;
 	this.headersSent        = true;
 	this.finished           = true;

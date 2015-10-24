@@ -12,8 +12,10 @@ function IncomingMessage (opts) {
 	this.headers["cookie"]          = document.cookie;
 	this.headers["user-agent"]      = navigator.userAgent;
 	this.headers["accept-language"] = navigator.language;
+	this.headers["connection"]      = "keep-alive";
+	this.headers["cache-control"]   = "max-age=0";
+	this.headers["accept"]          = "*/*";
 	this.headers["referer"]         = referrer;
-	this.trailers                   = opts.trailers || {};
 	this.connection                 = {
 		remoteAddress: "127.0.0.1",
 		encrypted: location.protocol === "https:"

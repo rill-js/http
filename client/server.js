@@ -82,9 +82,10 @@ proto.navigate = function navigate (req, replaceState) {
 	var req = new Request(req);
 	var res = new Response();
 
-	res.once("finish", function onEnd() {
+	res.once("end", function onEnd() {
 		req.complete = true;
-		req.emit("finsish");
+		req.emit("end");
+
 		clearTimeout(this._pending_refresh);
 
 		// Check if we should set some cookies.
@@ -150,6 +151,8 @@ proto.navigate = function navigate (req, replaceState) {
 			? "replaceState"
 			: "pushState"
 		](null, "", req.url);
+
+		req.emit("finish");
 	}.bind(this));
 
 	this.emit("request", req, res);
