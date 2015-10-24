@@ -70,7 +70,6 @@ proto.setHeader = function setHeader (header, value) {
  * Handle event ending the same as node js.
  */
 proto.end = function end () {
-	this.emit("end");
 	if (this.finished) {
 		throw new Error("Response has already been sent.");
 	}
