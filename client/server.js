@@ -4,11 +4,6 @@ var handlers     = require("./handlers")
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var location     = window.history.location || window.location;
-var reg          = {
-	hash:          /#(.+)$/,
-	cookieOptions: /(domain|path|expires|max-age|httponly|secure)( *= *[^;]*)?/g,
-	cookieValues:  / *; */
-};
 
 /**
  * Emulates node js http server in the browser.
@@ -91,16 +86,8 @@ proto.navigate = function navigate (req, replaceState) {
 		// Check if we should set some cookies.
 		if (res.getHeader("set-cookie")) {
 			var cookies = res.getHeader("set-cookie");
-			// In the browser each cookie required options, so we extract them.
-			var options = (cookies.match(reg.cookieOptions) || []).join("; ");
-			if (options) options = "; " + options;
-
-			// We must set each cookie individually if there are multiple.
-			cookies
-				.replace(reg.cookieOptions, "")
-				.split(reg.cookieValues)
-				.filter(Boolean) // Ensure we don't have any empty cookies.
-				.forEach(function (cookie) { document.cookie = cookie + options; });
+			if (cookies.constructor !== Array) cookies = [cookies];
+			cookies.forEach(function (cookie) { document.cookie = cookie; });
 		}
 
 		// Check to see if a refresh was requested.
@@ -129,7 +116,7 @@ proto.navigate = function navigate (req, replaceState) {
 		 * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
 		 * This is similar to how browsers handle page transitions natively.
 		 */
-		var hash = req.url.match(reg.hash);
+		var hash = req.url.match(/#(.+)$/);
 
 		if (hash != null) {
 			target = document.getElementById(hash[1]);
