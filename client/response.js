@@ -25,11 +25,10 @@ proto.addTrailers   = noop;
  * Write status, status message and headers the same as node js.
  */
 proto.writeHead = function writeHead (statusCode, statusMessage, headers) {
-	if (this.finished) {
-		throw new Error("Response has already been sent.");
-	}
+	if (this.finished) return;
 
-	this.statusCode = statusCode;
+	this.statusCode  = statusCode;
+	this.headersSent = true;
 	if (statusMessage) {
 		if (typeof statusMessage === "object") {
 			headers = statusMessage;
@@ -70,9 +69,7 @@ proto.setHeader = function setHeader (header, value) {
  * Handle event ending the same as node js.
  */
 proto.end = function end () {
-	if (this.finished) {
-		throw new Error("Response has already been sent.");
-	}
+	if (this.finished) return;
 
 	if (this.statusMessage == null) {
 		this.statusMessage = STATUS_CODES[this.statusCode];
