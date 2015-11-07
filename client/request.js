@@ -3,6 +3,8 @@ var EventEmitter = require("events").EventEmitter;
 var location     = window.history.location || window.location;
 var referrer     = document.referrer;
 
+// TODO: Make options only the socket and manually set everything else.
+// API Symmetry.
 function IncomingMessage (opts) {
 	this.url                        = opts.url;
 	this.method                     = opts.method || "GET";

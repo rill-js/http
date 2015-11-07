@@ -1,5 +1,5 @@
 var EventEmitter = require("events").EventEmitter;
-var STATUS_CODES = require("./constants/status-codes.json");
+var STATUS_CODES = require("statuses/codes.json");
 var noop         = function () {};
 
 function ServerResponse (opts) {
