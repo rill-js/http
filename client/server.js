@@ -104,7 +104,7 @@ proto.navigate = function navigate (req, replaceState) {
 
 		// Check to see if we should redirect.
 		if (res.getHeader("location")) {
-			this.navigate(res.getHeader("location"));
+			setTimeout(this.navigate.bind(this, res.getHeader("location"), true), 0);
 			return;
 		}
 
