@@ -37,7 +37,7 @@ proto.listen = function listen () {
 	window.addEventListener("submit", this._onSubmit);
 	window.addEventListener("click", this._onClick);
 
-	if (typeof callback === "function") setTimeout(cb, 0);
+	if (typeof cb === "function") setTimeout(cb, 0);
 	return this;
 };
 
@@ -52,7 +52,7 @@ proto.close = function close () {
 	window.removeEventListener("submit", this._onSubmit);
 	window.removeEventListener("click", this._onClick);
 
-	if (typeof callback === "function") setTimeout(db, 0);
+	if (typeof cb === "function") setTimeout(cb, 0);
 	this.emit("close");
 	return this;
 };
