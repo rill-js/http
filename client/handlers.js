@@ -46,7 +46,10 @@ function onSubmit (e) {
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
 
 	if (method === "GET") {
+		// On a get request a forms body is converted into a query string.
 		var parsed = URL.parse(el.action);
+		// We delete the search part so that a query object can be used.
+		delete parsed.search;
 		parsed.query = flat(data.body);
 		this.navigate(URL.format(parsed));
 	} else {
