@@ -69,7 +69,7 @@ proto.navigate = function navigate (req, replaceState) {
 	if (typeof req === "string") req = { url: req };
 
 	// Ignore links that don't share a protocol or host with the browsers.
-	var parsed = URL.parse(URL.resolve(location.origin, req.url));
+	var parsed = URL.parse(URL.resolve(location.href, req.url));
 	if (parsed.host !== location.host) return false;
 	if (parsed.protocol !== location.protocol) return false;
 

@@ -47,7 +47,7 @@ function onSubmit (e) {
 
 	if (method === "GET") {
 		// On a get request a forms body is converted into a query string.
-		var parsed = URL.parse(el.action);
+		var parsed = URL.parse(URL.resolve(location.href, el.action));
 		// We delete the search part so that a query object can be used.
 		delete parsed.search;
 		parsed.query = flat(data.body);
