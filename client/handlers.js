@@ -1,6 +1,7 @@
 var URL      = require("url");
 var flat     = require("q-flat");
 var formJSON = require("@rill/form-json");
+var location = window.history.location || window.location;
 
 var reg = {
 	rel: /(?:^|\s+)external(?:\s+|$)/

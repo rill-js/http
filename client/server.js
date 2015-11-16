@@ -73,7 +73,7 @@ proto.navigate = function navigate (req, replaceState) {
 	if (parsed.host !== location.host) return false;
 	if (parsed.protocol !== location.protocol) return false;
 
-	req.url = parsed.path;
+	req.url = parsed.path + (parsed.hash || "");
 	var req = new Request(req);
 	var res = new Response();
 
