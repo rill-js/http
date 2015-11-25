@@ -1,7 +1,7 @@
-var URL      = require("url");
-var flat     = require("q-flat");
-var formJSON = require("@rill/form-json");
-var location = window.history.location || window.location;
+var URL       = require("url");
+var flat      = require("q-flat");
+var parseForm = require("parse-form");
+var location  = window.history.location || window.location;
 
 var reg = {
 	rel: /(?:^|\s+)external(?:\s+|$)/
@@ -42,7 +42,7 @@ function onSubmit (e) {
 	// Ignore 'rel="external"' links.
 	if (el.hasAttribute("rel") && reg.rel.test(el.getAttribute("rel"))) return;
 
-	var data   = formJSON(el);
+	var data   = parseForm(el);
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
 
 	if (method === "GET") {
