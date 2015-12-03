@@ -1,3 +1,5 @@
+"use strict";
+
 var Server          = require("./server");
 var IncomingMessage = require("./request.js");
 var ServerResponse  = require("./response.js");

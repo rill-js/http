@@ -1,3 +1,5 @@
+"use strict";
+
 var URL          = require("url");
 var EventEmitter = require("events").EventEmitter;
 var handlers     = require("./handlers")

@@ -1,3 +1,5 @@
+"use strict";
+
 var URL       = require("url");
 var parseForm = require("parse-form");
 var location  = window.history.location || window.location;
@@ -31,7 +33,7 @@ function onSubmit (e) {
 	if (e.defaultPrevented) return;
 
 	// Get the <form> element.
-	var el = event.target;
+	var el = e.target;
 
 	// Ignore clicks from linkless elements
 	if (!el.action) return;
@@ -62,7 +64,7 @@ function onSubmit (e) {
 	}
 
 	if (!el.hasAttribute("data-noreset")) el.reset();
-	event.preventDefault();
+	e.preventDefault();
 };
 
 /*
@@ -72,14 +74,14 @@ function onSubmit (e) {
  */
 function onClick (e) {
 	// Ignore canceled events, modified clicks, and right clicks.
-	if (event.defaultPrevented ||
-		event.metaKey ||
-		event.ctrlKey ||
-		event.shiftKey ||
-		event.button !== 0) return;
+	if (e.defaultPrevented ||
+		e.metaKey ||
+		e.ctrlKey ||
+		e.shiftKey ||
+		e.button !== 0) return;
 
 	// Get the <a> element.
-	var el = event.target;
+	var el = e.target;
 	while (el != null && el.nodeName !== "A") el = el.parentNode;
 
 	// Ignore if we couldn't find a link.
@@ -95,5 +97,5 @@ function onClick (e) {
 	if (el.rel && reg.rel.test(el.rel)) return;
 
 	// Attempt to navigate internally.
-	if (this.navigate(el.href)) event.preventDefault();
+	if (this.navigate(el.href)) e.preventDefault();
 };

@@ -1,3 +1,5 @@
+"use strict";
+
 var EventEmitter = require("events").EventEmitter;
 var STATUS_CODES = require("statuses/codes.json");
 var noop         = function () {};
@@ -16,8 +18,8 @@ proto.finished      = false;
 /**
  * Make some methods noops.
  */
-proto.write         = 
-proto.writeContinue = 
+proto.write         =
+proto.writeContinue =
 proto.setTimeout    =
 proto.addTrailers   = noop;
 
