@@ -1,6 +1,6 @@
 {
   "name": "@rill/http",
-  "version": "0.5.8",
+  "version": "0.6.0",
   "description": "Isomorphic http module with createServer support.",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "main": "server/index.js",
@@ -10,17 +10,15 @@
     "url": "https://github.com/rill-js/http"
   },
   "dependencies": {
-    "parse-form": "^0.1.0",
-    "q-flat": "^0.1.0",
-    "q-set": "^0.1.5",
+    "parse-form": "^1.0.0",
     "statuses": "^1.2.1"
   },
   "devDependencies": {
-    "browserify": "^11.2.0",
+    "browserify": "^12.0.1",
     "gulp": "^3.9.0",
     "gulp-mocha-phantomjs": "^0.10.1",
     "gulp-webserver": "^0.9.1",
-    "mocha": "^2.3.3",
+    "mocha": "^2.3.4",
     "vinyl-source-stream": "^1.1.0"
   },
   "license": "MIT"

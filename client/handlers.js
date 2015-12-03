@@ -1,5 +1,4 @@
 var URL       = require("url");
-var flat      = require("q-flat");
 var parseForm = require("parse-form");
 var location  = window.history.location || window.location;
 
@@ -42,15 +41,15 @@ function onSubmit (e) {
 	// Ignore 'rel="external"' links.
 	if (el.hasAttribute("rel") && reg.rel.test(el.getAttribute("rel"))) return;
 
-	var data   = parseForm(el);
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
+	var data = parseForm(el, method === "GET");
 
 	if (method === "GET") {
 		// On a get request a forms body is converted into a query string.
 		var parsed = URL.parse(URL.resolve(location.href, el.action));
 		// We delete the search part so that a query object can be used.
 		delete parsed.search;
-		parsed.query = flat(data.body);
+		parsed.query = data.body;
 		this.navigate(URL.format(parsed));
 	} else {
 		this.navigate({
@@ -58,10 +57,8 @@ function onSubmit (e) {
 			method: method,
 			body:   data.body,
 			files:  data.files,
-			headers: {
-				"content-type": el.enctype
-			}
-		})
+			headers: { "content-type": el.enctype }
+		});
 	}
 
 	if (!el.hasAttribute("data-noreset")) el.reset();
