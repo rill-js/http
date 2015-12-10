@@ -121,7 +121,7 @@ proto.navigate = function navigate (req, replaceState) {
 		var hash = req.url.match(/#(.+)$/);
 
 		if (hash != null) {
-			target = document.getElementById(hash[1]);
+			var target = document.getElementById(hash[1]);
 			if (target) {
 				target.scrollIntoView({
 					block: "start",
