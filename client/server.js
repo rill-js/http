@@ -14,7 +14,6 @@ var location     = window.history.location || window.location;
  */
 function Server (handler) {
 	this._handle          = this;
-	this._started         = false;
 	this._pending_refresh = null;
 	if (handler) {
 		if (typeof handler !== "function") {
@@ -29,15 +28,15 @@ var proto = Server.prototype = Object.create(EventEmitter.prototype);
  * Listen to all url change events on a dom element and trigger the server callback.
  */
 proto.listen = function listen () {
-	var cb            = arguments[arguments.length - 1];
-	this._onURLChange = handlers.onURLChange.bind(this);
-	this._onSubmit    = handlers.onSubmit.bind(this);
-	this._onClick     = handlers.onClick.bind(this);
+	var cb           = arguments[arguments.length - 1];
+	this._onPopState = handlers.onPopState.bind(this);
+	this._onSubmit   = handlers.onSubmit.bind(this);
+	this._onClick    = handlers.onClick.bind(this);
 
-	window.addEventListener("DOMContentLoaded", this._onURLChange);
-	window.addEventListener("popstate", this._onURLChange);
-	window.addEventListener("submit", this._onSubmit);
-	window.addEventListener("click", this._onClick);
+	window.addEventListener("DOMContentLoaded", this._onPopState);
+	window.addEventListener("popstate",         this._onPopState);
+	window.addEventListener("submit",           this._onSubmit);
+	window.addEventListener("click",            this._onClick);
 
 	if (typeof cb === "function") setTimeout(cb, 0);
 	return this;
@@ -49,10 +48,10 @@ proto.listen = function listen () {
 proto.close = function close () {
 	var cb = arguments[arguments.length - 1];
 
-	window.removeEventListener("DOMContentLoaded", this._onURLChange);
-	window.removeEventListener("popstate", this._onURLChange);
-	window.removeEventListener("submit", this._onSubmit);
-	window.removeEventListener("click", this._onClick);
+	window.removeEventListener("DOMContentLoaded", this._onPopState);
+	window.removeEventListener("popstate",         this._onPopState);
+	window.removeEventListener("submit",           this._onSubmit);
+	window.removeEventListener("click",            this._onClick);
 
 	if (typeof cb === "function") setTimeout(cb, 0);
 	this.emit("close");
@@ -63,10 +62,13 @@ proto.close = function close () {
  * Trigger the registered handle to navigate to a given url.
  *
  * @param {String|Object} req
- * @param {Boolean} replaceState
+ * @param {Object} opts
+ * @param {Boolean} opts.popState
+ * @param {Boolean} opts.replaceState
  * @api private
  */
-proto.navigate = function navigate (req, replaceState) {
+proto.navigate = function navigate (req, opts) {
+	if (typeof opts !== "object") opts = {};
 	// Allow navigation with url only.
 	if (typeof req === "string") req = { url: req };
 
@@ -83,6 +85,7 @@ proto.navigate = function navigate (req, replaceState) {
 		req.complete = true;
 		req.emit("end");
 
+		// Any navigation during a "refresh" will cancel the refresh.
 		clearTimeout(this._pending_refresh);
 
 		// Check if we should set some cookies.
@@ -99,19 +102,19 @@ proto.navigate = function navigate (req, replaceState) {
 			var redirectURL = parts[1];
 			// This handles refresh headers similar to browsers.
 			this._pending_refresh = setTimeout(
-				this.navigate.bind(this, redirectURL, true),
+				this.navigate.bind(this, redirectURL),
 				timeout
 			);
 		}
 
 		// Check to see if we should redirect.
 		if (res.getHeader("location")) {
-			setTimeout(this.navigate.bind(this, res.getHeader("location"), true), 0);
+			setTimeout(this.navigate.bind(this, res.getHeader("location"), { replaceState: true }), 0);
 			return;
 		}
 
-		// Check to see if we should update the url.
-		if (req.method !== "GET") return;
+		// Check to see if we shouldn't update the url.
+		if (req.method !== "GET" || opts.popState) return;
 
 		/*
 		 * When navigating a user will be brought to the top of the page.
@@ -119,27 +122,23 @@ proto.navigate = function navigate (req, replaceState) {
 		 * This is similar to how browsers handle page transitions natively.
 		 */
 		var hash = req.url.match(/#(.+)$/);
-
-		if (hash != null) {
+		if (hash == null) window.scrollTo(0, 0);
+		else {
 			var target = document.getElementById(hash[1]);
 			if (target) {
 				target.scrollIntoView({
-					block: "start",
+					block:    "start",
 					behavior: "smooth"
 				});
 			}
-		} else if (this._started) {
-			window.scrollTo(0, 0);
 		}
 
-		// Started allows for the browser to handle the initial scroll position.
-		this._started = true;
-
 		// Update the href in the browser.
-		history[replaceState
+		history[opts.replaceState
 			? "replaceState"
 			: "pushState"
-		](null, "", req.url);
+		](null, document.title, req.url);
+
 	}.bind(this));
 
 	this.emit("request", req, res);

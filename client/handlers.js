@@ -3,37 +3,35 @@
 var URL       = require("url");
 var parseForm = require("parse-form");
 var location  = window.history.location || window.location;
-
-var reg = {
-	rel: /(?:^|\s+)external(?:\s+|$)/
-};
+var reg       = { rel: /(?:^|\s+)external(?:\s+|$)/ };
 
 module.exports = {
-	onURLChange: onURLChange,
-	onSubmit: onSubmit,
-	onClick: onClick
+	onPopState: onPopState,
+	onSubmit:   onSubmit,
+	onClick:    onClick
 };
 
 /*
- * Handle an event that changed the url (popstate or page load).
+ * Handle an a pop state (back) event.
  *
- * @param {Object} event
+ * @param {Object} e
  */
-function onURLChange (e) {
-	this.navigate(location.href, true);
+function onPopState (e) {
+	this.navigate(location.href, { popState: true });
 };
 
 /*
  * Handle intercepting forms to update the url.
  *
- * @param {Object} event
+ * @param {Object} e
  */
 function onSubmit (e) {
 	// Ignore canceled events.
 	if (e.defaultPrevented) return;
 
 	// Get the <form> element.
-	var el = e.target;
+	var el        = e.target;
+	var submitted = false;
 
 	// Ignore clicks from linkless elements
 	if (!el.action) return;
@@ -52,33 +50,35 @@ function onSubmit (e) {
 		// We delete the search part so that a query object can be used.
 		delete parsed.search;
 		parsed.query = data.body;
-		this.navigate(URL.format(parsed));
+		submitted    = this.navigate(URL.format(parsed));
 	} else {
-		this.navigate({
-			url:    el.action,
-			method: method,
-			body:   data.body,
-			files:  data.files,
+		submitted = this.navigate({
+			url:     el.action,
+			method:  method,
+			body:    data.body,
+			files:   data.files,
 			headers: { "content-type": el.enctype }
 		});
 	}
 
 	if (!el.hasAttribute("data-noreset")) el.reset();
-	e.preventDefault();
+	if (submitted) e.preventDefault();
 };
 
 /*
  * Handle intercepting link clicks to update the url.
  *
- * @param {Object} event
+ * @param {Object} e
  */
 function onClick (e) {
 	// Ignore canceled events, modified clicks, and right clicks.
-	if (e.defaultPrevented ||
-		e.metaKey ||
-		e.ctrlKey ||
-		e.shiftKey ||
-		e.button !== 0) return;
+	if (
+		e.defaultPrevented ||
+		e.metaKey          ||
+		e.ctrlKey          ||
+		e.shiftKey         ||
+		e.button           !== 0
+	) return;
 
 	// Get the <a> element.
 	var el = e.target;
