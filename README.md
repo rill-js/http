@@ -15,7 +15,7 @@ npm install @rill/http
 # Example
 
 ```javascript
-var http = require("http");
+var http = require("@rill/http");
 
 window; //-> [Object object]
 
