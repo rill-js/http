@@ -64,7 +64,6 @@ proto.close = function close () {
  * @param {String|Object} req
  * @param {Object} opts
  * @param {Boolean} opts.popState
- * @param {Boolean} opts.replaceState
  * @api private
  */
 proto.navigate = function navigate (req, opts) {
@@ -109,7 +108,7 @@ proto.navigate = function navigate (req, opts) {
 
 		// Check to see if we should redirect.
 		if (res.getHeader("location")) {
-			setTimeout(this.navigate.bind(this, res.getHeader("location"), { replaceState: true }), 0);
+			setTimeout(this.navigate.bind(this, res.getHeader("location")), 0);
 			return;
 		}
 
@@ -134,10 +133,7 @@ proto.navigate = function navigate (req, opts) {
 		}
 
 		// Update the href in the browser.
-		history[opts.replaceState
-			? "replaceState"
-			: "pushState"
-		](null, document.title, req.url);
+		history.pushState(null, document.title, req.url);
 
 	}.bind(this));
 
