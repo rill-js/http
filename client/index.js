@@ -41,7 +41,8 @@ module.exports = {
 	Server: Server,
 	IncomingMessage: IncomingMessage,
 	ServerResponse: ServerResponse,
-	createServer: function createServer (requestListener) {
-		return new Server(requestListener);
+	createServer: function createServer () {
+		var cb = arguments[arguments.length - 1];
+		return new Server(cb);
 	}
 };
