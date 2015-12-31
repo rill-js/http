@@ -33,13 +33,8 @@ function onSubmit (e) {
 	var el        = e.target;
 	var submitted = false;
 
-	// Ignore clicks from linkless elements
-	if (!el.action) return;
-
 	// Ignore the click if the element has a target.
 	if (el.target && el.target !== "_self") return;
-	// Ignore 'rel="external"' links.
-	if (el.hasAttribute("rel") && reg.rel.test(el.getAttribute("rel"))) return;
 
 	var method = (el.getAttribute("method") || el.method).toUpperCase();
 	var data = parseForm(el, method === "GET");
@@ -86,7 +81,6 @@ function onClick (e) {
 
 	// Ignore if we couldn't find a link.
 	if (!el) return;
-
 	// Ignore clicks from linkless elements
 	if (!el.href) return;
 	// Ignore downloadable links.
@@ -95,7 +89,6 @@ function onClick (e) {
 	if (el.target && el.target !== "_self") return;
 	// Ignore 'rel="external"' links.
 	if (el.rel && reg.rel.test(el.rel)) return;
-
 	// Attempt to navigate internally.
 	if (this.navigate(el.href)) e.preventDefault();
 };

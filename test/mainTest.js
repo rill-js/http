@@ -220,22 +220,6 @@ describe("HTTP", function () {
 			clickEl(submit);
 		});
 
-		it("should ignore rel external forms", function (done) {
-			var testURL = "/test-" + uid();
-			var el      = createEl("form", { action: testURL, method: "POST", rel: "external" });
-			var input   = createEl("input", { name: "test", value: "1" });
-			var submit  = createEl("button", { type: "submit" });
-			el.appendChild(input);
-			el.appendChild(submit);
-
-			afterSubmit(el, function () {
-				assert.equal(formData, undefined);
-				done();
-			});
-
-			clickEl(submit);
-		});
-
 		it("should ignore target forms", function (done) {
 			var testURL = "/test-" + uid();
 			var el      = createEl("form", { action: testURL, method: "POST", target: "_blank" });
