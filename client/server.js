@@ -116,7 +116,7 @@ proto.navigate = function navigate (req, opts) {
 		if (
 			opts.popState ||
 			req.method !== "GET" ||
-			req.headers.referrer === req.url
+			req.headers.referer === req.url
 		) return;
 
 		/*
