@@ -113,7 +113,11 @@ proto.navigate = function navigate (req, opts) {
 		}
 
 		// Check to see if we shouldn't update the url.
-		if (req.method !== "GET" || opts.popState) return;
+		if (
+			opts.popState ||
+			req.method !== "GET" ||
+			req.headers.referrer === req.url
+		) return;
 
 		/*
 		 * When navigating a user will be brought to the top of the page.
