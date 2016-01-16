@@ -6,6 +6,7 @@ var handlers     = require("./handlers")
 var Request      = require("./request.js");
 var Response     = require("./response.js");
 var location     = window.history.location || window.location;
+var referrer     = undefined;
 
 /**
  * Emulates node js http server in the browser.
@@ -76,9 +77,10 @@ proto.navigate = function navigate (req, opts) {
 	if (parsed.host !== location.host) return false;
 	if (parsed.protocol !== location.protocol) return false;
 
-	req.url = parsed.path + (parsed.hash || "");
-	var req = new Request(req);
-	var res = new Response();
+	req.url      = parsed.path + (parsed.hash || "");
+	req.referrer = referrer;
+	var req      = new Request(req);
+	var res      = new Response();
 
 	res.once("finish", function onEnd() {
 		req.complete = true;
@@ -112,12 +114,11 @@ proto.navigate = function navigate (req, opts) {
 			return;
 		}
 
+		// Ensure referrer gets updated for non-redirects.
+		referrer = req.url;
+
 		// Check to see if we shouldn't update the url.
-		if (
-			opts.popState ||
-			req.method !== "GET" ||
-			req.headers.referer === req.url
-		) return;
+		if (opts.popState || req.method !== "GET" || req.headers.referer === req.url) return;
 
 		/*
 		 * When navigating a user will be brought to the top of the page.

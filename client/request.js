@@ -3,7 +3,6 @@
 var URL          = require("url");
 var EventEmitter = require("events").EventEmitter;
 var location     = window.history.location || window.location;
-var referrer     = document.referrer;
 
 // TODO: Make options only the socket and manually set everything else.
 // API Symmetry.
@@ -11,6 +10,7 @@ function IncomingMessage (opts) {
 	this.url                        = opts.url;
 	this.method                     = opts.method || "GET";
 	this.headers                    = opts.headers || {};
+	this.headers["referer"]         = opts.referrer;
 	this.headers["date"]            = (new Date()).toUTCString();
 	this.headers["host"]            = location.host;
 	this.headers["cookie"]          = document.cookie;
@@ -19,14 +19,12 @@ function IncomingMessage (opts) {
 	this.headers["connection"]      = "keep-alive";
 	this.headers["cache-control"]   = "max-age=0";
 	this.headers["accept"]          = "*/*";
-	this.headers["referer"]         = referrer;
 	this.connection                 = {
 		remoteAddress: "127.0.0.1",
 		encrypted: location.protocol === "https:"
 	};
 	this.body = opts.body;
 	this.files = opts.files;
-	referrer = opts.url;
 }
 var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype);
 
