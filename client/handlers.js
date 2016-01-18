@@ -32,27 +32,28 @@ function onSubmit (e) {
 	// Get the <form> element.
 	var el        = e.target;
 	var submitted = false;
+	var target    = getAttribute(el, "target");
+	var method    = (getAttribute(el, "method")).toUpperCase();
+	var action    = getAttribute(el, "action");
+	var data      = parseForm(el, method === "GET");
 
 	// Ignore the click if the element has a target.
-	if (el.target && el.target !== "_self") return;
-
-	var method = (el.getAttribute("method") || el.method).toUpperCase();
-	var data = parseForm(el, method === "GET");
+	if (target && target !== "_self") return;
 
 	if (method === "GET") {
 		// On a get request a forms body is converted into a query string.
-		var parsed = URL.parse(URL.resolve(location.href, el.action));
+		var parsed = URL.parse(URL.resolve(location.href, action));
 		// We delete the search part so that a query object can be used.
 		delete parsed.search;
 		parsed.query = data.body;
 		submitted    = this.navigate(URL.format(parsed));
 	} else {
 		submitted = this.navigate({
-			url:     el.action,
+			url:     action,
 			method:  method,
 			body:    data.body,
 			files:   data.files,
-			headers: { "content-type": el.enctype }
+			headers: { "content-type": getAttribute(el, "enctype") }
 		});
 	}
 
@@ -92,3 +93,12 @@ function onClick (e) {
 	// Attempt to navigate internally.
 	if (this.navigate(el.href)) e.preventDefault();
 };
+
+/*
+ * Better get attribute with fall backs.
+ * This is used for form attributes because named inputs will override them.
+ */
+function getAttribute (el, attr) {
+	var val = el.getAttribute(attr) || el[attr];
+	return typeof val === "string" ? val : "";
+}
