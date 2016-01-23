@@ -35,7 +35,7 @@ function onSubmit (e) {
 	var target    = getAttribute(el, "target");
 	var method    = (getAttribute(el, "method")).toUpperCase();
 	var action    = getAttribute(el, "action");
-	var data      = parseForm(el, method === "GET");
+	var data      = parseForm(el, true);
 
 	// Ignore the click if the element has a target.
 	if (target && target !== "_self") return;
