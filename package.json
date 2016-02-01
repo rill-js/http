@@ -1,6 +1,6 @@
 {
   "name": "@rill/http",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Isomorphic http module with createServer support.",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "main": "server/index.js",
@@ -18,7 +18,7 @@
     "gulp": "^3.9.0",
     "gulp-mocha-phantomjs": "^0.10.1",
     "gulp-webserver": "^0.9.1",
-    "mocha": "^2.3.4",
+    "mocha": "^2.4.5",
     "vinyl-source-stream": "^1.1.0"
   },
   "license": "MIT"

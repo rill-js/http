@@ -33,8 +33,8 @@ function onSubmit (e) {
 	var el        = e.target;
 	var submitted = false;
 	var target    = getAttribute(el, "target");
-	var method    = (getAttribute(el, "method")).toUpperCase();
 	var action    = getAttribute(el, "action");
+	var method    = getAttribute(el, "method").toUpperCase();
 	var data      = parseForm(el, true);
 
 	// Ignore the click if the element has a target.
@@ -82,21 +82,31 @@ function onClick (e) {
 
 	// Ignore if we couldn't find a link.
 	if (!el) return;
+
+	var href   = getAttribute(el, "href");
+	var target = getAttribute(el, "target");
+	var rel    = getAttribute(el, "rel");
+
 	// Ignore clicks from linkless elements
-	if (!el.href) return;
-	// Ignore downloadable links.
-	if (el.download) return;
+	if (!href) return;
 	// Ignore the click if the element has a target.
-	if (el.target && el.target !== "_self") return;
+	if (target && target !== "_self") return;
 	// Ignore 'rel="external"' links.
-	if (el.rel && reg.rel.test(el.rel)) return;
+	if (reg.rel.test(rel)) return;
+	// Ignore downloadable links.
+	if (el.hasAttribute("download")) return;
 	// Attempt to navigate internally.
-	if (this.navigate(el.href)) e.preventDefault();
+	if (this.navigate(href)) e.preventDefault();
 };
 
 /*
  * Better get attribute with fall backs.
- * This is used for form attributes because named inputs will override them.
+ * In some browsers default values like a forms method are not propigated to getAttribute.
+ * This will check a forms attribute and properties.
+ *
+ * @param {HTMLEntiry} el
+ * @param {String} attr
+ * @return {String}
  */
 function getAttribute (el, attr) {
 	var val = el.getAttribute(attr) || el[attr];

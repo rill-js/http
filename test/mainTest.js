@@ -138,6 +138,20 @@ describe("HTTP", function () {
 
 			clickEl(el);
 		});
+
+		it("should ignore links with a download attribute", function (done) {
+			var el = createEl("a", { href: "http://google.ca", download: "test.file" });
+
+			assert.ok(location.path !== el.href);
+
+			onClick(el, function (e) {
+				assert.ok(!e.defaultPrevented);
+				assert.ok(location.href !== el.href);
+				done();
+			});
+
+			clickEl(el);
+		});
 	});
 
 	describe("Forms", function () {
