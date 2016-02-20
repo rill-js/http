@@ -1,6 +1,6 @@
 {
   "name": "@rill/http",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Isomorphic http module with createServer support.",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "main": "server/index.js",
