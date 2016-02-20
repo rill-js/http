@@ -10,13 +10,13 @@
     "url": "https://github.com/rill-js/http"
   },
   "dependencies": {
-    "parse-form": "^2.0.2",
+    "parse-form": "^2.0.3",
     "statuses": "^1.2.1"
   },
   "devDependencies": {
     "browserify": "^13.0.0",
-    "gulp": "^3.9.0",
-    "gulp-mocha-phantomjs": "^0.10.1",
+    "gulp": "^3.9.1",
+    "gulp-mocha-phantomjs": "^0.11.0",
     "gulp-webserver": "^0.9.1",
     "mocha": "^2.4.5",
     "vinyl-source-stream": "^1.1.0"
