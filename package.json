@@ -1,14 +1,10 @@
 {
   "name": "@rill/http",
-  "version": "1.0.4",
   "description": "Isomorphic http module with createServer support.",
+  "version": "1.0.5",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
-  "main": "server/index.js",
   "browser": "client/index.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/rill-js/http"
-  },
+  "bugs": "https://github.com/rill-js/http/issues",
   "dependencies": {
     "parse-form": "^2.0.3",
     "statuses": "^1.2.1"
@@ -19,7 +15,35 @@
     "gulp-mocha-phantomjs": "^0.11.0",
     "gulp-webserver": "^0.9.1",
     "mocha": "^2.4.5",
+    "snazzy": "^3.0.0",
+    "standard": "^6.0.8",
     "vinyl-source-stream": "^1.1.0"
   },
-  "license": "MIT"
+  "homepage": "https://github.com/rill-js/http",
+  "keywords": [
+    "http",
+    "isomorphic",
+    "rill",
+    "server",
+    "web"
+  ],
+  "license": "MIT",
+  "main": "server/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rill-js/http"
+  },
+  "scripts": {
+    "test": "standard --verbose | snazzy && gulp test"
+  },
+  "standard": {
+    "globals": [
+      "describe",
+      "it",
+      "before",
+      "beforeEach",
+      "after",
+      "afterEach"
+    ]
+  }
 }
