@@ -13,10 +13,8 @@ module.exports = {
 
 /*
  * Handle an a pop state (back) event.
- *
- * @param {Object} e
  */
-function onPopState (e) {
+function onPopState () {
   this.navigate(location.href, { popState: true })
 }
 

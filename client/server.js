@@ -35,8 +35,12 @@ server.listen = function listen () {
   this._onSubmit = handlers.onSubmit.bind(this)
   this._onClick = handlers.onClick.bind(this)
 
+  window.addEventListener('DOMContentLoaded', function onLoad () {
+    this.once('listening', this._onPopState)
+    window.removeEventListener(onLoad)
+  }.bind(this))
+
   setTimeout(function () {
-    window.addEventListener('DOMContentLoaded', this._onPopState)
     window.addEventListener('popstate', this._onPopState)
     window.addEventListener('submit', this._onSubmit)
     window.addEventListener('click', this._onClick)
@@ -55,7 +59,6 @@ server.close = function close () {
   var cb = arguments[arguments.length - 1]
 
   setTimeout(function () {
-    window.removeEventListener('DOMContentLoaded', this._onPopState)
     window.removeEventListener('popstate', this._onPopState)
     window.removeEventListener('submit', this._onSubmit)
     window.removeEventListener('click', this._onClick)
