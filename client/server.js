@@ -37,7 +37,7 @@ server.listen = function listen () {
 
   window.addEventListener('DOMContentLoaded', function onLoad () {
     this.once('listening', this._onPopState)
-    window.removeEventListener(onLoad)
+    window.removeEventListener('DOMContentLoaded', onLoad)
   }.bind(this))
 
   setTimeout(function () {
