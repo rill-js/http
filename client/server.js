@@ -35,12 +35,16 @@ server.listen = function listen () {
   this._onSubmit = handlers.onSubmit.bind(this)
   this._onClick = handlers.onClick.bind(this)
 
-  window.addEventListener('DOMContentLoaded', this._onPopState)
-  window.addEventListener('popstate', this._onPopState)
-  window.addEventListener('submit', this._onSubmit)
-  window.addEventListener('click', this._onClick)
+  setTimeout(function () {
+    window.addEventListener('DOMContentLoaded', this._onPopState)
+    window.addEventListener('popstate', this._onPopState)
+    window.addEventListener('submit', this._onSubmit)
+    window.addEventListener('click', this._onClick)
+    this.listening = true
+    if (typeof cb === 'function') cb()
+    this.emit('listening')
+  }.bind(this), 0)
 
-  if (typeof cb === 'function') setTimeout(cb, 0)
   return this
 }
 
@@ -50,13 +54,16 @@ server.listen = function listen () {
 server.close = function close () {
   var cb = arguments[arguments.length - 1]
 
-  window.removeEventListener('DOMContentLoaded', this._onPopState)
-  window.removeEventListener('popstate', this._onPopState)
-  window.removeEventListener('submit', this._onSubmit)
-  window.removeEventListener('click', this._onClick)
+  setTimeout(function () {
+    window.removeEventListener('DOMContentLoaded', this._onPopState)
+    window.removeEventListener('popstate', this._onPopState)
+    window.removeEventListener('submit', this._onSubmit)
+    window.removeEventListener('click', this._onClick)
+    this.listening = false
+    if (typeof cb === 'function') cb()
+    this.emit('close')
+  }.bind(this), 0)
 
-  if (typeof cb === 'function') setTimeout(cb, 0)
-  this.emit('close')
   return this
 }
 
