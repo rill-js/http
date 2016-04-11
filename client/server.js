@@ -31,16 +31,15 @@ function Server (handler) {
  */
 server.listen = function listen () {
   var cb = arguments[arguments.length - 1]
+  this._onLoad = handlers.onLoad.bind(this)
   this._onPopState = handlers.onPopState.bind(this)
   this._onSubmit = handlers.onSubmit.bind(this)
   this._onClick = handlers.onClick.bind(this)
 
-  window.addEventListener('DOMContentLoaded', function onLoad () {
-    this.once('listening', this._onPopState)
-    window.removeEventListener('DOMContentLoaded', onLoad)
-  }.bind(this))
+  window.addEventListener('DOMContentLoaded', this._onLoad)
 
   setTimeout(function () {
+    window.removeEventListener('DOMContentLoaded', this._onLoad)
     window.addEventListener('popstate', this._onPopState)
     window.addEventListener('submit', this._onSubmit)
     window.addEventListener('click', this._onClick)
