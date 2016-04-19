@@ -36,10 +36,8 @@ server.listen = function listen () {
   this._onSubmit = handlers.onSubmit.bind(this)
   this._onClick = handlers.onClick.bind(this)
 
-  window.addEventListener('DOMContentLoaded', this._onLoad)
-
   setTimeout(function () {
-    window.removeEventListener('DOMContentLoaded', this._onLoad)
+    this._onLoad()
     window.addEventListener('popstate', this._onPopState)
     window.addEventListener('submit', this._onSubmit)
     window.addEventListener('click', this._onClick)
