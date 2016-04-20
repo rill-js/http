@@ -7,6 +7,7 @@ var Request = require('./request.js')
 var Response = require('./response.js')
 var history = window.history
 var location = history.location || window.location
+var hashReg = /#(.+)$/
 var server = Server.prototype = Object.create(EventEmitter.prototype)
 var referrer
 
@@ -125,15 +126,15 @@ server.navigate = function navigate (req, opts) {
     // Ensure referrer gets updated for non-redirects.
     referrer = req.url
 
-    // Check to see if we shouldn't update the url.
-    if (opts.popState || req.method !== 'GET' || req.headers.referer === req.url) return
+    // We don't do hash scrolling unless it is a get request.
+    if (req.method !== 'GET') return
 
     /*
      * When navigating a user will be brought to the top of the page.
      * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
      * This is similar to how browsers handle page transitions natively.
      */
-    var hash = req.url.match(/#(.+)$/)
+    var hash = req.url.match(hashReg)
     if (hash == null) window.scrollTo(0, 0)
     else {
       var target = document.getElementById(hash[1])
@@ -144,6 +145,11 @@ server.navigate = function navigate (req, opts) {
         })
       }
     }
+
+    // Don't update url on popstate since browser already handles it.
+    if (opts.popState) return
+    // Don't update url if we are already on the right url.
+    if (req.headers.referer === req.url) return
 
     // Update the href in the browser.
     history.pushState(null, document.title, req.url)
