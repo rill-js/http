@@ -31,20 +31,27 @@ function Server (handler) {
  * Listen to all url change events on a dom element and trigger the server callback.
  */
 server.listen = function listen () {
+  // Automatically add callback `listen` handler.
   var cb = arguments[arguments.length - 1]
-  this._onLoad = handlers.onLoad.bind(this)
+  if (typeof cb === 'function') this.once('listening', cb)
+
+  // Setup link/form hijackers.
   this._onPopState = handlers.onPopState.bind(this)
   this._onSubmit = handlers.onSubmit.bind(this)
   this._onClick = handlers.onClick.bind(this)
 
+  // Setup initial load event and treat it as popstate.
+  this.once('listening', this._onPopState)
+
+  // Ensure that listening is `async`.
   setTimeout(function () {
-    this._onLoad()
+    // Mark server as listening.
+    this.listening = true
+    this.emit('listening')
+    // Register link/form hijackers.
     window.addEventListener('popstate', this._onPopState)
     window.addEventListener('submit', this._onSubmit)
     window.addEventListener('click', this._onClick)
-    this.listening = true
-    if (typeof cb === 'function') cb()
-    this.emit('listening')
   }.bind(this), 0)
 
   return this
@@ -54,14 +61,18 @@ server.listen = function listen () {
  * Closes the server and destroys all event listeners.
  */
 server.close = function close () {
+  // Automatically add callback `close` handler.
   var cb = arguments[arguments.length - 1]
+  if (typeof cb === 'function') this.once('close', cb)
 
+  // Ensure that closing is `async`.
   setTimeout(function () {
+    // Unregister link/form hijackers.
     window.removeEventListener('popstate', this._onPopState)
     window.removeEventListener('submit', this._onSubmit)
     window.removeEventListener('click', this._onClick)
+    // Mark server as closed.
     this.listening = false
-    if (typeof cb === 'function') cb()
     this.emit('close')
   }.bind(this), 0)
 
@@ -77,21 +88,29 @@ server.close = function close () {
  * @api private
  */
 server.navigate = function navigate (req, opts) {
+  // Make options optional.
   if (typeof opts !== 'object') opts = {}
   // Allow navigation with url only.
   if (typeof req === 'string') req = { url: req }
 
   // Ignore links that don't share a protocol or host with the browsers.
   var parsed = URL.parse(URL.resolve(location.href, req.url))
+  // Ignore links for different hosts.
   if (parsed.host !== location.host) return false
+  // Ignore links with a different protocol.
   if (parsed.protocol !== location.protocol) return false
 
+  // Ensure that the url is nodejs like (starts with initial forward slash) but has the hash portion.
   req.url = parsed.path + (parsed.hash || '')
+  // Attach referrer (stored on each request).
   req.referrer = referrer
+  // Create a nodejs style req and res.
   req = new Request(req)
   var res = new Response()
 
+  // Wait for request to be sent.
   res.once('finish', function onEnd () {
+    // Node marks requests as complete.
     req.complete = true
     req.emit('end')
 
@@ -101,8 +120,13 @@ server.navigate = function navigate (req, opts) {
     // Check if we should set some cookies.
     if (res.getHeader('set-cookie')) {
       var cookies = res.getHeader('set-cookie')
-      if (cookies.constructor !== Array) cookies = [cookies]
-      cookies.forEach(function (cookie) { document.cookie = cookie })
+      if (Array.isArray(cookies)) {
+        // Set multiple cookie header.
+        cookies.forEach(function (cookie) { document.cookie = cookie })
+      } else {
+        // Set a single cookie.
+        document.cookie = cookies
+      }
     }
 
     // Check to see if a refresh was requested.
@@ -110,7 +134,7 @@ server.navigate = function navigate (req, opts) {
       var parts = res.getHeader('refresh').split(' url=')
       var timeout = parseInt(parts[0]) * 1000
       var redirectURL = parts[1]
-      // This handles refresh headers similar to browsers.
+      // This handles refresh headers similar to browsers by waiting a timeout, then navigating.
       this._pending_refresh = setTimeout(
         this.navigate.bind(this, redirectURL),
         timeout
@@ -146,9 +170,10 @@ server.navigate = function navigate (req, opts) {
       }
     }
 
-    // Don't update url on popstate since browser already handles it.
+    // popstate state is handled by the browser.
     if (opts.popState) return
-    // Don't update url if we are already on the right url.
+
+    // No need to update state when urls are the same.
     if (req.headers.referer === req.url) return
 
     // Update the href in the browser.

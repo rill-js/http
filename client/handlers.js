@@ -6,17 +6,9 @@ var location = window.history.location || window.location
 var relReg = /(?:^|\s+)external(?:\s+|$)/
 
 module.exports = {
-  onLoad: onLoad,
   onPopState: onPopState,
   onSubmit: onSubmit,
   onClick: onClick
-}
-
-/**
- * Handles DOMContent loaded.
- */
-function onLoad () {
-  this.once('listening', onPopState)
 }
 
 /*

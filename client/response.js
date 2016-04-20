@@ -19,9 +19,9 @@ proto.finished = false
  * Make some methods noops.
  */
 proto.write =
-  proto.writeContinue =
-    proto.setTimeout =
-      proto.addTrailers = noop
+proto.writeContinue =
+proto.setTimeout =
+proto.addTrailers = noop
 
 /**
  * Write status, status message and headers the same as node js.
