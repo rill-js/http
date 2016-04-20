@@ -173,9 +173,6 @@ server.navigate = function navigate (req, opts) {
     // popstate state is handled by the browser.
     if (opts.popState) return
 
-    // No need to update state when urls are the same.
-    if (req.headers.referer === req.url) return
-
     // Update the href in the browser.
     history.pushState(null, document.title, req.url)
   }.bind(this))
