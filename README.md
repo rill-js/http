@@ -6,7 +6,7 @@
 Bring a nodejs style server into the client.
 
 # Why
-People love node, people love the programming style and it's flexability. This api exposes the "http" module as an isomorphic server. It essentually allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by Rill (to be released) which implements an express style api on top of this.
+People love node, people love the programming style and it's flexability. This api exposes the "http" module as an isomorphic server. It essentually allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
 
 # Installation
 
@@ -18,9 +18,9 @@ npm install @rill/http
 # Example
 
 ```javascript
-var http = require("@rill/http");
+// Note that the following code runs in the browser.
 
-window; //-> [Object object]
+var http = require("@rill/http");
 
 var server = http.createServer(function handler (req, res) {
 	console.log(req.method, req.url);

@@ -55,8 +55,10 @@ function onSubmit (e) {
     })
   }
 
-  if (!el.hasAttribute('data-noreset')) el.reset()
-  if (submitted) e.preventDefault()
+  if (submitted) {
+    if (!el.hasAttribute('data-noreset')) el.reset()
+    e.preventDefault()
+  }
 }
 
 /*
