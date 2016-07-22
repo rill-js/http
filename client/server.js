@@ -156,9 +156,6 @@ server.navigate = function navigate (req, opts) {
     // popstate state is handled by the browser.
     if (opts.popState) return
 
-    // Don't push the same url twice.
-    if (req.headers.referer === req.url) return
-
     /*
      * When navigating a user will be brought to the top of the page.
      * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
@@ -175,6 +172,9 @@ server.navigate = function navigate (req, opts) {
         })
       }
     }
+
+    // Don't push the same url twice.
+    if (req.headers.referer === req.url) return
 
     // Update the href in the browser.
     history.pushState(null, document.title, req.url)
