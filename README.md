@@ -6,7 +6,7 @@
 Bring a nodejs style server into the client.
 
 # Why
-People love node, people love the programming style and it's flexability. This api exposes the "http" module as an isomorphic server. It essentually allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
+People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
 
 # Installation
 
@@ -28,7 +28,7 @@ var server = http.createServer(function handler (req, res) {
 });
 
 /**
- * Listening in the browser will intelegently intercept link clicks and form
+ * Listening in the browser will intelligently intercept link clicks and form
  * submissions and feed them into the registered handler.
  */
 server.listen();
