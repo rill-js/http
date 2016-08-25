@@ -1,7 +1,7 @@
 {
   "name": "@rill/http",
   "description": "Universal http module with createServer support.",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "browser": "client/index.js",
   "bugs": "https://github.com/rill-js/http/issues",
@@ -16,7 +16,7 @@
     "gulp-webserver": "^0.9.1",
     "mocha": "^3.0.2",
     "snazzy": "^4.0.1",
-    "standard": "^7.1.2",
+    "standard": "^8.0.0",
     "vinyl-source-stream": "^1.1.0"
   },
   "homepage": "https://github.com/rill-js/http",
