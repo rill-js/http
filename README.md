@@ -34,7 +34,6 @@ People love node, people love the programming style and it's flexibility. This a
 
 # Installation
 
-#### Npm
 ```console
 npm install @rill/http
 ```
@@ -44,18 +43,18 @@ npm install @rill/http
 ```javascript
 // Note that the following code runs in the browser.
 
-var http = require("@rill/http");
+var http = require("@rill/http")
 
-var server = http.createServer(function handler (req, res) {
-	console.log(req.method, req.url);
-	res.end();
+var server = http.createServer((req, res)=> {
+	console.log(req.method, req.url)
+	res.end()
 });
 
 /**
  * Listening in the browser will intelligently intercept link clicks and form
  * submissions and feed them into the registered handler.
  */
-server.listen();
+server.listen()
 ```
 
 ### Contributions
