@@ -9,7 +9,7 @@ var history = window.history
 var location = history.location || window.location
 var hashReg = /#(.+)$/
 var server = Server.prototype = Object.create(EventEmitter.prototype)
-var referrer
+var referrer = document.referrer
 
 /**
  * Emulates node js http server in the browser.
@@ -94,7 +94,8 @@ server.navigate = function navigate (req, opts) {
   if (typeof req === 'string') req = { url: req }
 
   // Ignore links that don't share a protocol or host with the browsers.
-  var parsed = URL.parse(URL.resolve(location.href, req.url))
+  var href = URL.resolve(location.href, req.url)
+  var parsed = URL.parse(href)
   // Ignore links for different hosts.
   if (parsed.host !== location.host) return false
   // Ignore links with a different protocol.
@@ -104,6 +105,7 @@ server.navigate = function navigate (req, opts) {
   req.url = parsed.path + (parsed.hash || '')
   // Attach referrer (stored on each request).
   req.referrer = referrer
+
   // Create a nodejs style req and res.
   req = new Request(req)
   var res = new Response()
@@ -148,7 +150,7 @@ server.navigate = function navigate (req, opts) {
     }
 
     // Ensure referrer gets updated for non-redirects.
-    referrer = req.url
+    referrer = href
 
     // We don't do hash scrolling unless it is a get request.
     if (req.method !== 'GET') return
@@ -168,7 +170,11 @@ server.navigate = function navigate (req, opts) {
       if (target) {
         target.scrollIntoView({
           block: 'start',
-          behavior: 'smooth'
+          // Only use smooth scrolling if we are on the page already.
+          behavior: (
+            location.pathname === parsed.pathname &&
+            (location.search || '') === (parsed.search || '')
+          ) ? 'smooth' : 'auto'
         })
       }
     }
