@@ -91,20 +91,23 @@ server.navigate = function navigate (req, opts) {
   // Make options optional.
   if (typeof opts !== 'object') opts = {}
   // Allow navigation with url only.
-  if (typeof req === 'string') req = { url: req }
+  if (typeof req === 'string'){ req = { url: req }}
 
-  // Ignore links that don't share a protocol or host with the browsers.
-  var href = URL.resolve(location.href, req.url)
-  var parsed = URL.parse(href)
-  // Ignore links for different hosts.
-  if (parsed.host !== location.host) return false
-  // Ignore links with a different protocol.
-  if (parsed.protocol !== location.protocol) return false
+  if(!(req instanceof window.Request)){
+    // Ignore links that don't share a protocol or host with the browsers.
+    var href = URL.resolve(location.href, req.url)
+    var parsed = URL.parse(href)
+    // Ignore links for different hosts.
+    if (parsed.host !== location.host) return false
+    // Ignore links with a different protocol.
+    if (parsed.protocol !== location.protocol) return false
 
-  // Ensure that the url is nodejs like (starts with initial forward slash) but has the hash portion.
-  req.url = parsed.path + (parsed.hash || '')
-  // Attach referrer (stored on each request).
-  req.referrer = referrer
+    // Ensure that the url is nodejs like (starts with initial forward slash) but has the hash portion.
+    req.url = parsed.path + (parsed.hash || '')
+    // Attach referrer (stored on each request).
+    req.referrer = referrer
+  }
+  if(!req.url) return false;
 
   // Create a nodejs style req and res.
   req = new Request(req)
@@ -187,7 +190,7 @@ server.navigate = function navigate (req, opts) {
   }.bind(this))
 
   this.emit('request', req, res)
-  return this
+  return res;
 }
 
 module.exports = Server
