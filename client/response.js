@@ -84,7 +84,7 @@ proto.end = function end () {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
-  this.emit('finish')
+  this.emit('finish', this)
 }
 
 module.exports = ServerResponse
