@@ -90,10 +90,10 @@ server.close = function close () {
 server.navigate = function navigate (req, opts) {
   // Make options optional.
   if (typeof opts !== 'object') opts = {}
-  // Allow navigation with url only.
-  if (typeof req === 'string'){ req = { url: req }}
 
-  if(!(req instanceof window.Request)){
+  if(window.Request && !(req instanceof window.Request)){
+    // Allow navigation with url only.
+    if (typeof req === 'string'){ req = { url: req }}
     // Ignore links that don't share a protocol or host with the browsers.
     var href = URL.resolve(location.href, req.url)
     var parsed = URL.parse(href)
@@ -106,12 +106,14 @@ server.navigate = function navigate (req, opts) {
     req.url = parsed.path + (parsed.hash || '')
     // Attach referrer (stored on each request).
     req.referrer = referrer
-  }
-  if(!req.url) return false;
+    if(!req.url) return false
 
-  // Create a nodejs style req and res.
-  req = new Request(req)
-  var res = new Response()
+    // Create a req.
+    req = Object.assign(req, opts)
+    req = window.Request ? window.Request(req) : new Request(req)
+  }
+  // Create a res.
+  var res = window.Response ? new window.Response() : new Response()
 
   // Wait for request to be sent.
   res.once('finish', function onEnd () {
