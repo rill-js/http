@@ -1,7 +1,7 @@
 'use strict'
 
 var EventEmitter = require('events').EventEmitter
-var location = window && window.history.location || window.location
+var location = typeof window !== "undefined" ? window.location : {};
 
 // TODO: Make options only the socket and manually set everything else.
 // API Symmetry.

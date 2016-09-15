@@ -2,7 +2,7 @@
 
 var URL = require('url')
 var parseForm = require('parse-form')
-var location = window && window.history.location || window.location
+var location = typeof window !== "undefined" ? window.location : {};
 var relReg = /(?:^|\s+)external(?:\s+|$)/
 
 module.exports = {

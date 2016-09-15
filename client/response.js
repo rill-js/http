@@ -6,6 +6,7 @@ var noop = function () {}
 
 function ServerResponse (opts) {
   this._headers = {}
+  this._browserResponse = opts ? opts.browserResponse : opts;
 }
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 
@@ -84,7 +85,16 @@ proto.end = function end () {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
-  this.emit('finish', this)
+  if(!this._browserResponse){
+    return this.emit('finish', this);
+  }
+  let body = this.body;
+  switch(typeof this.body){
+    case 'string': body = [body]; break;
+    case 'function': body = this.body(this); break;
+    default: break;
+  }
+  this.emit('finish', new Response(new Blob(body), {headers:this.headers}));
 }
 
 module.exports = ServerResponse

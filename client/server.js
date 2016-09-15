@@ -3,12 +3,13 @@
 var URL = require('url')
 var EventEmitter = require('events').EventEmitter
 var handlers = require('./handlers')
-var history = window || window.history
-var location = (history &&  history.location )|| (window && window.location )
+var history = typeof window !== "undefined" ? window.history : {}
+var location = typeof window !== "undefined" ? window.location : {}
 var hashReg = /#(.+)$/
 var server = Server.prototype = Object.create(EventEmitter.prototype)
+var document = typeof window !== "undefined" ? window.document : {}
 var referrer = document.referrer
-
+var localResponse = require('./response');
 /**
  * Emulates node js http server in the browser.
  *
@@ -47,7 +48,7 @@ server.listen = function listen () {
     this.listening = true
     this.emit('listening')
     // Register link/form hijackers.
-    if(!window){
+    if(typeof window === "undefined"){
       return
     }
     window.addEventListener('popstate', this._onPopState)
@@ -69,7 +70,7 @@ server.close = function close () {
   // Ensure that closing is `async`.
   setTimeout(function () {
     // Unregister link/form hijackers.
-    if(!window){
+    if(typeof window !== "undefined"){
       window.removeEventListener('popstate', this._onPopState)
       window.removeEventListener('submit', this._onSubmit)
       window.removeEventListener('click', this._onClick)
@@ -91,32 +92,25 @@ server.close = function close () {
  * @api private
  */
 server.navigate = function navigate (req, opts) {
+  req = req || '';
   // Make options optional.
   if (typeof opts !== 'object') opts = {}
-
   if(!(req instanceof Request)){
     // Allow navigation with url only.
-    if (typeof req === 'string'){ req = { url: req }}
-    // Ignore links that don't share a protocol or host with the browsers.
-    var href = URL.resolve(location.href, req.url)
-    var parsed = URL.parse(href)
-    // Ignore links for different hosts.
-    if (parsed.host !== location.host) return false
-    // Ignore links with a different protocol.
-    if (parsed.protocol !== location.protocol) return false
-
-    // Ensure that the url is nodejs like (starts with initial forward slash) but has the hash portion.
-    req.url = parsed.path + (parsed.hash || '')
-    // Attach referrer (stored on each request).
-    req.referrer = referrer
-    if(!req.url) return false
-
-    // Create a req.
-    req = Object.assign(req, opts)
-    req = new Request(req)
+    if (typeof req === 'string'){
+      req = new Request(req, opts);
+    }else{
+      req = new Request(req.url, opts);
+    }
   }
+  var href = URL.resolve(location && location.href || '', req.url)
+  if(!req.emit){
+    const reqEmitter = new EventEmitter();
+    req.emit = reqEmitter.emit.bind(reqEmitter);
+  }
+
   // Create a res.
-  var res = new Response()
+  var res = new localResponse({browserResponse:opts.browserResponse});
 
   // Wait for request to be sent.
   res.once('finish', function onEnd () {
@@ -164,7 +158,7 @@ server.navigate = function navigate (req, opts) {
     if (req.method !== 'GET') return
 
     // popstate state is handled by the browser.
-    if (opts.popState || !window) return
+    if (opts.popState || typeof window === 'undefined') return
 
     /*
      * When navigating a user will be brought to the top of the page.
