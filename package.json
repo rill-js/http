@@ -1,14 +1,70 @@
 {
-  "name": "@rill/http",
-  "description": "Universal http module with createServer support.",
-  "version": "2.0.0",
-  "author": "Dylan Piercey <pierceydylan@gmail.com>",
+  "_args": [
+    [
+      {
+        "raw": "http@git://github.com/johnhenry/http.git#master",
+        "scope": null,
+        "escapedName": "http",
+        "name": "http",
+        "rawSpec": "git://github.com/johnhenry/http.git#master",
+        "spec": "git://github.com/johnhenry/http.git#master",
+        "type": "hosted",
+        "hosted": {
+          "type": "github",
+          "ssh": "git@github.com:johnhenry/http.git#master",
+          "sshUrl": "git+ssh://git@github.com/johnhenry/http.git#master",
+          "httpsUrl": "git+https://github.com/johnhenry/http.git#master",
+          "gitUrl": "git://github.com/johnhenry/http.git#master",
+          "shortcut": "github:johnhenry/http#master",
+          "directUrl": "https://raw.githubusercontent.com/johnhenry/http/master/package.json"
+        }
+      },
+      "C:\\Users\\John\\BT Sync\\projects\\koa-2-middleware\\node_modules\\koa-2-browser"
+    ]
+  ],
+  "_from": "git://github.com/johnhenry/http.git#master",
+  "_id": "@rill/http@2.0.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/@rill/http",
+  "_phantomChildren": {},
+  "_requested": {
+    "raw": "http@git://github.com/johnhenry/http.git#master",
+    "scope": null,
+    "escapedName": "http",
+    "name": "http",
+    "rawSpec": "git://github.com/johnhenry/http.git#master",
+    "spec": "git://github.com/johnhenry/http.git#master",
+    "type": "hosted",
+    "hosted": {
+      "type": "github",
+      "ssh": "git@github.com:johnhenry/http.git#master",
+      "sshUrl": "git+ssh://git@github.com/johnhenry/http.git#master",
+      "httpsUrl": "git+https://github.com/johnhenry/http.git#master",
+      "gitUrl": "git://github.com/johnhenry/http.git#master",
+      "shortcut": "github:johnhenry/http#master",
+      "directUrl": "https://raw.githubusercontent.com/johnhenry/http/master/package.json"
+    }
+  },
+  "_requiredBy": [],
+  "_resolved": "git://github.com/johnhenry/http.git#af0432ecf33b52031c8ceaaf074c3a2425274405",
+  "_shasum": "012ff85d34515ab4c0b6a746ce5bae3ae22aada8",
+  "_shrinkwrap": null,
+  "_spec": "http@git://github.com/johnhenry/http.git#master",
+  "_where": "C:\\Users\\John\\BT Sync\\projects\\koa-2-middleware\\node_modules\\koa-2-browser",
+  "author": {
+    "name": "Dylan Piercey",
+    "email": "pierceydylan@gmail.com"
+  },
   "browser": "client/index.js",
-  "bugs": "https://github.com/rill-js/http/issues",
+  "bugs": {
+    "url": "https://github.com/rill-js/http/issues"
+  },
   "dependencies": {
     "parse-form": "^2.0.3",
     "statuses": "^1.3.0"
   },
+  "description": "Universal http module with createServer support.",
   "devDependencies": {
     "browserify": "^13.1.0",
     "gulp": "^3.9.1",
@@ -19,6 +75,7 @@
     "standard": "^8.0.0",
     "vinyl-source-stream": "^1.1.0"
   },
+  "gitHead": "af0432ecf33b52031c8ceaaf074c3a2425274405",
   "homepage": "https://github.com/rill-js/http",
   "keywords": [
     "http",
@@ -30,9 +87,13 @@
   ],
   "license": "MIT",
   "main": "server/index.js",
+  "name": "@rill/http",
+  "optionalDependencies": {},
+  "readme": "<h1 align=\"center\">\n  <!-- Logo -->\n  <img src=\"https://raw.githubusercontent.com/rill-js/rill/master/Rill-Icon.jpg\" alt=\"Rill\"/>\n  <br/>\n  @rill/http\n\t<br/>\n\n  <!-- Stability -->\n  <a href=\"https://nodejs.org/api/documentation.html#documentation_stability_index\">\n    <img src=\"https://img.shields.io/badge/stability-stable-brightgreen.svg?style=flat-square\" alt=\"API stability\"/>\n  </a>\n  <!-- Standard -->\n  <a href=\"https://github.com/feross/standard\">\n    <img src=\"https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square\" alt=\"Standard\"/>\n  </a>\n  <!-- NPM version -->\n  <a href=\"https://npmjs.org/package/@rill/http\">\n    <img src=\"https://img.shields.io/npm/v/@rill/http.svg?style=flat-square\" alt=\"NPM version\"/>\n  </a>\n  <!-- Downloads -->\n  <a href=\"https://npmjs.org/package/@rill/http\">\n    <img src=\"https://img.shields.io/npm/dm/@rill/http.svg?style=flat-square\" alt=\"Downloads\"/>\n  </a>\n  <!-- Gitter Chat -->\n  <a href=\"https://gitter.im/rill-js/rill\">\n    <img src=\"https://img.shields.io/gitter/room/rill-js/rill.svg?style=flat-square\" alt=\"Gitter Chat\"/>\n  </a>\n</h1>\n\nBring a nodejs style server into the client by listening to link clicks and form submissions.\n\n# Why\nPeople love node, people love the programming style and it's flexibility. This api exposes the \"http\" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.\n\n# Installation\n\n```console\nnpm install @rill/http\n```\n\n# Example\n\n```javascript\n// Note that the following code runs in the browser.\n\nvar http = require(\"@rill/http\")\n\nvar server = http.createServer((req, res)=> {\n\tconsole.log(req.method, req.url)\n\tres.end()\n});\n\n/**\n * Listening in the browser will intelligently intercept link clicks and form\n * submissions and feed them into the registered handler.\n */\nserver.listen()\n```\n\n### Contributions\n\n* Use `npm test` to run tests.\n\nPlease feel free to create a PR!\n",
+  "readmeFilename": "README.md",
   "repository": {
     "type": "git",
-    "url": "https://github.com/rill-js/http"
+    "url": "git+https://github.com/rill-js/http.git"
   },
   "scripts": {
     "test": "standard --verbose | snazzy && gulp test"
@@ -46,5 +107,6 @@
       "after",
       "afterEach"
     ]
-  }
+  },
+  "version": "2.0.0"
 }
