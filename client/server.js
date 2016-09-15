@@ -3,10 +3,8 @@
 var URL = require('url')
 var EventEmitter = require('events').EventEmitter
 var handlers = require('./handlers')
-var Request = require('./request.js')
-var Response = require('./response.js')
-var history = window.history
-var location = history.location || window.location
+var history = window || window.history
+var location = (history &&  history.location )|| (window && window.location )
 var hashReg = /#(.+)$/
 var server = Server.prototype = Object.create(EventEmitter.prototype)
 var referrer = document.referrer
@@ -49,6 +47,9 @@ server.listen = function listen () {
     this.listening = true
     this.emit('listening')
     // Register link/form hijackers.
+    if(!window){
+      return
+    }
     window.addEventListener('popstate', this._onPopState)
     window.addEventListener('submit', this._onSubmit)
     window.addEventListener('click', this._onClick)
@@ -68,9 +69,11 @@ server.close = function close () {
   // Ensure that closing is `async`.
   setTimeout(function () {
     // Unregister link/form hijackers.
-    window.removeEventListener('popstate', this._onPopState)
-    window.removeEventListener('submit', this._onSubmit)
-    window.removeEventListener('click', this._onClick)
+    if(!window){
+      window.removeEventListener('popstate', this._onPopState)
+      window.removeEventListener('submit', this._onSubmit)
+      window.removeEventListener('click', this._onClick)
+    }
     // Mark server as closed.
     this.listening = false
     this.emit('close')
@@ -91,7 +94,7 @@ server.navigate = function navigate (req, opts) {
   // Make options optional.
   if (typeof opts !== 'object') opts = {}
 
-  if(window.Request && !(req instanceof window.Request)){
+  if(!(req instanceof Request)){
     // Allow navigation with url only.
     if (typeof req === 'string'){ req = { url: req }}
     // Ignore links that don't share a protocol or host with the browsers.
@@ -110,10 +113,10 @@ server.navigate = function navigate (req, opts) {
 
     // Create a req.
     req = Object.assign(req, opts)
-    req = window.Request ? window.Request(req) : new Request(req)
+    req = new Request(req)
   }
   // Create a res.
-  var res = window.Response ? new window.Response() : new Response()
+  var res = new Response()
 
   // Wait for request to be sent.
   res.once('finish', function onEnd () {
@@ -161,7 +164,7 @@ server.navigate = function navigate (req, opts) {
     if (req.method !== 'GET') return
 
     // popstate state is handled by the browser.
-    if (opts.popState) return
+    if (opts.popState || !window) return
 
     /*
      * When navigating a user will be brought to the top of the page.
