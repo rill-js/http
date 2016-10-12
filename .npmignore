@@ -1,0 +1,12 @@
+# Sublime
+*.sublime*
+
+# OSX
+*.DS_Store
+
+# NPM
+node_modules
+npm-debug.log
+
+# Testing
+test/run.js
