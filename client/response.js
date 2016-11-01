@@ -1,11 +1,18 @@
 'use strict'
 
+var Buffer = require('buffer').Buffer
 var EventEmitter = require('events').EventEmitter
 var STATUS_CODES = require('statuses/codes.json')
-var noop = function () {}
+function noop () {}
 
-function ServerResponse (opts) {
+/**
+ * Emulates nodes ServerResponse in the browser.
+ * See: https://nodejs.org/api/http.html#http_class_http_serverresponse
+ */
+function ServerResponse (opts, server) {
+  this._body = []
   this._headers = {}
+  this.socket = this.connection = { server: server }
 }
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 
@@ -18,10 +25,25 @@ proto.finished = false
 /**
  * Make some methods noops.
  */
-proto.write =
 proto.writeContinue =
 proto.setTimeout =
 proto.addTrailers = noop
+
+/**
+ * Writes to the response body.
+ */
+proto.write = function (chunk, encoding, cb) {
+  this._body.push(Buffer.from(chunk))
+
+  if (typeof encoding === 'function') {
+    cb = encoding
+    encoding = null
+  }
+
+  if (typeof cb === 'function') {
+    this.once('finish', cb)
+  }
+}
 
 /**
  * Write status, status message and headers the same as node js.
@@ -70,8 +92,24 @@ proto.setHeader = function setHeader (header, value) {
 /**
  * Handle event ending the same as node js.
  */
-proto.end = function end () {
+proto.end = function end (chunk, encoding, cb) {
   if (this.finished) return
+
+  if (typeof chunk === 'function') {
+    cb = chunk
+    chunk = null
+  } else if (typeof encoding === 'function') {
+    cb = encoding
+    encoding = null
+  }
+
+  if (chunk != null) {
+    this._body.push(Buffer.from(chunk))
+  }
+
+  if (typeof cb === 'function') {
+    this.once('finish', cb)
+  }
 
   if (this.statusMessage == null) {
     this.statusMessage = STATUS_CODES[this.statusCode]
@@ -84,6 +122,8 @@ proto.end = function end () {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
+  this.headers = this._headers
+  this.body = Buffer.concat(this._body)
   this.emit('finish')
 }
 

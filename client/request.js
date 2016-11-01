@@ -1,11 +1,21 @@
 'use strict'
 
 var EventEmitter = require('events').EventEmitter
-var location = window.history.location || window.location
+var global = require('global')
+var empty = {}
 
-// TODO: Make options only the socket and manually set everything else.
-// API Symmetry.
-function IncomingMessage (opts) {
+/* istanbul ignore next */
+var document = global.document || empty
+/* istanbul ignore next */
+var navigator = global.navigator || empty
+/* istanbul ignore next */
+var location = (global.history && global.history.location) || global.location || empty
+
+/**
+ * Emulates nodes IncomingMessage in the browser.
+ * See: https://nodejs.org/api/http.html#http_class_http_incomingmessage
+ */
+function IncomingMessage (opts, server) {
   this.url = opts.url
   this.method = opts.method || 'GET'
   this.headers = opts.headers || {}
@@ -18,12 +28,16 @@ function IncomingMessage (opts) {
   this.headers['connection'] = 'keep-alive'
   this.headers['cache-control'] = 'max-age=0'
   this.headers['accept'] = '*/*'
-  this.connection = {
+  this.socket = this.connection = {
+    server: server,
     remoteAddress: '127.0.0.1',
     encrypted: location.protocol === 'https:'
   }
   this.body = opts.body
   this.files = opts.files
+  this._parsed = opts._parsed
+  this._scroll = opts.scroll
+  this._history = opts.history
 }
 var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype)
 

@@ -17,17 +17,30 @@
   <a href="https://npmjs.org/package/@rill/http">
     <img src="https://img.shields.io/npm/v/@rill/http.svg?style=flat-square" alt="NPM version"/>
   </a>
+  <!-- Travis build -->
+  <a href="https://travis-ci.org/rill-js/http">
+  <img src="https://img.shields.io/travis/rill-js/http.svg?style=flat-square" alt="Build status"/>
+  </a>
+  <!-- Coveralls coverage -->
+  <a href="https://coveralls.io/github/rill-js/http">
+    <img src="https://img.shields.io/coveralls/rill-js/http.svg?style=flat-square" alt="Test Coverage"/>
+  </a>
   <!-- Downloads -->
   <a href="https://npmjs.org/package/@rill/http">
     <img src="https://img.shields.io/npm/dm/@rill/http.svg?style=flat-square" alt="Downloads"/>
   </a>
-  <!-- Gitter Chat -->
+  <!-- Gitter chat -->
   <a href="https://gitter.im/rill-js/rill">
     <img src="https://img.shields.io/gitter/room/rill-js/rill.svg?style=flat-square" alt="Gitter Chat"/>
+  </a>
+  <!-- Saucelabs -->
+  <a href="https://saucelabs.com/u/rill-js">
+    <img src="https://saucelabs.com/browser-matrix/rill-js.svg" alt="Sauce Test Status"/>
   </a>
 </h1>
 
 Bring a nodejs style server into the client by listening to link clicks and form submissions.
+Supports modern browsers IE10 and up. You can support IE9 with a [History API polyfill](https://github.com/devote/HTML5-History-API).
 
 # Why
 People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
@@ -41,9 +54,9 @@ npm install @rill/http
 # Example
 
 ```javascript
-// Note that the following code runs in the browser.
+// Note that the following code runs in pretty much any environment.
 
-var http = require("@rill/http")
+var http = require('@rill/http')
 
 var server = http.createServer((req, res)=> {
 	console.log(req.method, req.url)
@@ -55,6 +68,16 @@ var server = http.createServer((req, res)=> {
  * submissions and feed them into the registered handler.
  */
 server.listen()
+```
+
+# Browser Adapter
+By default @rill/http no longer will intercept link clicks and form submissions (although Rill still will). Instead you can adapt an existing @rill/http server to hijack the browser as well as add browser specific features such as cookies.
+
+In the future there may be more adapters for different environments such as mobile.
+
+```javascript
+var browserAdapter = require('@rill/http/adapter/browser')
+var server = browserAdapter(http.createServer())
 ```
 
 ### Contributions
