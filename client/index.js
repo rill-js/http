@@ -1,8 +1,8 @@
 'use strict'
 
 var Server = require('./server')
-var IncomingMessage = require('./request.js')
-var ServerResponse = require('./response.js')
+var IncomingMessage = require('./incoming-message')
+var ServerResponse = require('./server-response')
 
 var STATUS_CODES = require('statuses/codes.json')
 var METHODS = [

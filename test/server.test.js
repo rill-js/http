@@ -1,7 +1,10 @@
 'use strict'
 
+require('./polyfill')
 var assert = require('assert')
 var http = require('../client')
+var Request = global.Request
+var Headers = global.Headers
 
 describe('Server', function () {
   describe('#listen', function () {
@@ -48,11 +51,15 @@ describe('Server', function () {
       }
     })
 
-    it('should be able to redirect', function (done) {
+    it('should be able to redirect and follow redirect', function (done) {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        server.navigate('/test')
+        server.navigate('/test').then(function (res) {
+          assert(res.status, 200)
+          assert(res.url, '/redirected')
+          server.close(done)
+        })
       })
 
       function handleNavigate (req, res) {
@@ -65,6 +72,52 @@ describe('Server', function () {
       function handleRedirect (req, res) {
         assert.equal(req.url, '/redirected', 'should have redirected')
         res.end()
+      }
+    })
+
+    it('should be able to redirect and not follow redirect', function (done) {
+      var server = new http.Server()
+      server.once('request', handleNavigate)
+      server.listen(function () {
+        server.navigate('/test', { redirect: 'manual' }).then(function (res) {
+          assert(res.status, 200)
+          assert(res.url, '/test')
+          server.close(done)
+        })
+      })
+
+      function handleNavigate (req, res) {
+        assert.equal(req.url, '/test', 'should have navigated')
+        server.once('request', handleRedirect)
+        res.writeHead(302, { location: '/redirected' })
+        res.end()
+      }
+
+      function handleRedirect (req, res) {
+        assert(false, 'should not have redirected')
+      }
+    })
+
+    it('should accept a fetch request', function (done) {
+      var server = new http.Server(checkCompleted)
+      server.listen(function () {
+        server.navigate(new Request('/test', {
+          method: 'POST',
+          referrer: 'http://google.ca',
+          headers: new Headers({
+            a: 1,
+            b: 2
+          })
+        }))
+      })
+
+      function checkCompleted (req, res) {
+        assert(server.listening, 'server should be listening')
+        assert(req instanceof http.IncomingMessage, 'should have IncomingMessage')
+        assert(res instanceof http.ServerResponse, 'should have ServerResponse')
+        assert(req.url, '/test', 'should have proper url')
+        assert(req.headers['a'], '1', 'should have copied headers')
+        assert(req.headers['b'], '2', 'should have copied headers')
         server.close(done)
       }
     })

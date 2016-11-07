@@ -1,5 +1,6 @@
 'use strict'
 
+require('./polyfill')
 var assert = require('assert')
 var Buffer = require('buffer').Buffer
 var http = require('../client')

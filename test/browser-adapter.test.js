@@ -1,6 +1,6 @@
 'use strict'
 
-require('html5-history-api')
+require('./polyfill')
 var window = require('global')
 var URL = require('url')
 var assert = require('assert')
@@ -26,26 +26,25 @@ describe('Adapter/Browser', function () {
         })
     }
 
-    it('should set a single cookie', function (done) {
+    it('should set a single cookie', function () {
       server.once('request', function (req, res) {
         res.setHeader('set-cookie', 'x=1')
-        res.end(function () {
-          assert.equal(document.cookie, 'x=1', 'should have set cookie')
-          done()
-        })
+        res.end()
       })
-      server.navigate('/test', { method: 'POST' })
+
+      return server.navigate('/test', { method: 'POST' }).then(function () {
+        assert.equal(document.cookie, 'x=1', 'should have set cookie')
+      })
     })
 
-    it('should set a multiple cookies', function (done) {
+    it('should set a multiple cookies', function () {
       server.once('request', function (req, res) {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
-        res.end(function () {
-          assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
-          done()
-        })
+        res.end()
       })
-      server.navigate('/test', { method: 'POST' })
+      return server.navigate('/test', { method: 'POST' }).then(function () {
+        assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
+      })
     })
   })
 

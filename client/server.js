@@ -3,12 +3,21 @@
 var URL = require('url')
 var window = require('global')
 var EventEmitter = require('events').EventEmitter
-var Request = require('./request.js')
-var Response = require('./response.js')
+var IncomingMessage = require('./incoming-message')
+var ServerResponse = require('./server-response')
 var server = Server.prototype = Object.create(EventEmitter.prototype)
 var referrer = window.document && window.document.referrer
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
+// Make the fetch api optional.
+/* istanbul ignore next */
+var FetchRequest = window.Request || noop
+/* istanbul ignore next */
+var FetchResponse = window.Response || noop
+/* istanbul ignore next */
+var FetchHeaders = window.Headers || noop
+/* istanbul ignore next */
+function noop () {}
 
 /**
  * Emulates node js http server in the browser.
@@ -64,10 +73,21 @@ server.close = function close () {
  * @api private
  */
 server.navigate = function navigate (url, opts) {
-  // Cast url to string.
-  url = String(url)
-  // Make options optional.
-  if (typeof opts !== 'object') opts = {}
+  if (url instanceof FetchRequest) {
+    // Allow for a regular fetch request.
+    opts = {
+      method: url.method,
+      headers: headersToObject(url.headers)
+    }
+    url = url.url
+  } else {
+    // Allow for fetch style api.
+    url = String(url)
+    // Make options optional.
+    if (typeof opts !== 'object') opts = {}
+    // Default redirect mode to 'follow'
+    opts.redirect = opts.redirect || 'follow'
+  }
 
   // Ignore links that don't share a protocol or host with the browsers.
   var href = URL.resolve(location.href, url)
@@ -76,33 +96,63 @@ server.navigate = function navigate (url, opts) {
   // Ensure that the url is nodejs like (starts with initial forward slash) but has the hash portion.
   opts.url = parsed.path + (parsed.hash || '')
   // Attach referrer (stored on each request).
-  opts.referrer = referrer
+  opts.referrer = opts.referrer || referrer
   // Store the parsed url to use later.
   opts._parsed = parsed
 
   // Create a nodejs style req and res.
-  var req = new Request(opts, this)
-  var res = new Response(null, this)
+  var req = new IncomingMessage(opts, this)
+  var res = new ServerResponse(null, this)
 
-  // Wait for request to be sent.
-  res.once('finish', function onEnd () {
-    // Node marks requests as complete.
-    req.complete = true
-    req.emit('end')
+  // Store hidden references between request and response.
+  req._res = res
+  res._req = req
 
-    // Check to see if we should redirect.
-    var redirect = res.getHeader('location')
-    if (redirect) {
-      // Redirect the browser on the next tick.
-      setTimeout(this.navigate.bind(this, redirect), 0)
-    } else {
-      // Ensure referrer gets updated for non-redirects.
-      referrer = href
-    }
-  }.bind(this))
+  // Store server
+  var self = this
 
-  this.emit('request', req, res)
-  return this
+  // Return a 'fetch' style response as a promise.
+  return new Promise(function (resolve, reject) {
+    // Wait for request to be sent.
+    res.once('finish', function handleResponseEnd () {
+      // Marks request as complete.
+      req.complete = true
+      req.emit('end')
+
+      // Check to see if we should redirect.
+      var redirect = res.getHeader('location')
+      if (redirect) {
+        // Redirect the browser on the next tick.
+        if (opts.redirect === 'follow') {
+          return resolve(self.navigate(redirect))
+        }
+      } else {
+        // Ensure referrer gets updated for non-redirects.
+        referrer = req._parsed.href
+      }
+
+      return resolve(new FetchResponse(res.body, {
+        url: req.url,
+        status: res.statusCode,
+        statusText: res.statusMessage,
+        headers: new FetchHeaders(res.headers)
+      }))
+    })
+
+    // Trigger request event.
+    self.emit('request', req, res)
+  })
+}
+
+/**
+ * Enumerates whatwg fetch headers and turns it into an object.
+ */
+function headersToObject (headers) {
+  var result = {}
+  headers.forEach(function (value, header) {
+    result[header] = value
+  })
+  return result
 }
 
 module.exports = Server

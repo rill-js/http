@@ -63,7 +63,6 @@ function onClosing () {
  * Handle incomming requests and add a litener for when it is complete.
  */
 function onRequest (req, res) {
-  req._res = res
   req.once('end', onEnd)
 }
 
@@ -122,8 +121,8 @@ function onEnd () {
     if (parsed.hash == null) window.scrollTo(0, 0)
     else {
       var target = document.getElementById(parsed.hash.slice(1))
-      if (target) {
-        /* istanbul ignore next */
+      /* istanbul ignore next */
+      if (target && target.scrollIntoView) {
         target.scrollIntoView({
           block: 'start',
           // Only use smooth scrolling if we are on the page already.

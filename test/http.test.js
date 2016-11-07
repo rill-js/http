@@ -1,5 +1,6 @@
 'use strict'
 
+require('./polyfill')
 var assert = require('assert')
 var EventEmitter = require('events').EventEmitter
 var http = require('../client')
