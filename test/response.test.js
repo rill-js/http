@@ -5,15 +5,23 @@ var assert = require('assert')
 var Buffer = require('buffer').Buffer
 var http = require('../client')
 
+/**
+ * Creates an empty server response.
+ */
+function createServerResponse () {
+  var incomingMessage = new http.IncomingMessage()
+  return new http.ServerResponse._createServerResponse(incomingMessage, {})
+}
+
 describe('Response', function () {
   it('should not need options', function () {
-    var res = new http.ServerResponse()
+    var res = createServerResponse()
     assert(res, 'should have created response')
   })
 
   describe('#writeContinue, #setTimeout, #addTrailers', function () {
     it('should all be noops', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.writeContinue()
       res.setTimeout()
       res.addTrailers()
@@ -22,13 +30,13 @@ describe('Response', function () {
 
   describe('#setHeader, #getHeader', function () {
     it('should set and get a header', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.setHeader('X-Custom-Header', 'abc')
       assert.equal(res.getHeader('X-Custom-Header'), 'abc', 'should have set header')
     })
 
     it('should be case insensitive', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.setHeader('HEADER-CAPS', 'abc')
       assert.equal(res.getHeader('header-caps'), 'abc', 'should have set header')
 
@@ -39,7 +47,7 @@ describe('Response', function () {
 
   describe('#removeHeader', function () {
     it('should unset a header', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.setHeader('X-Custom-Header', 'abc')
       res.removeHeader('X-Custom-Header')
       assert.equal(res.getHeader('X-Custom-Header'), null, 'should have removed the header')
@@ -48,7 +56,7 @@ describe('Response', function () {
 
   describe('#writeHead', function () {
     it('should set status', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.writeHead(200)
 
       assert(res.headersSent, 'should have sent headers')
@@ -56,7 +64,7 @@ describe('Response', function () {
     })
 
     it('should set headers and status', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.writeHead(200, 'success', {
         'X-Custom-Header': 'hello'
       })
@@ -68,7 +76,7 @@ describe('Response', function () {
     })
 
     it('should have optional status message', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.writeHead(200, {
         'X-Custom-Header': 'hello'
       })
@@ -79,7 +87,7 @@ describe('Response', function () {
     })
 
     it('should do nothing if the request is already finished', function (done) {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.writeHead(200, 'success', {
         'X-Custom-Header': 'hello'
       })
@@ -99,13 +107,13 @@ describe('Response', function () {
 
   describe('#write', function () {
     it('should accept a buffer', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.write(Buffer.from(['abc']))
       assert.equal(res._body.length, 1, 'should have written to the body')
     })
 
     it('should accept a callback', function (done) {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.write(Buffer.from(['']), done)
       res.end()
     })
@@ -113,7 +121,7 @@ describe('Response', function () {
 
   describe('#end', function () {
     it('should accept a buffer', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.write(Buffer.from(['abc']))
       assert.equal(res._body.length, 1, 'should have written to the body')
       res.end(Buffer.from(['efd']))
@@ -122,7 +130,7 @@ describe('Response', function () {
     })
 
     it('should finish a response', function (done) {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       var called = 0
       res.once('finish', checkCompleted)
       res.end(checkCompleted)
@@ -136,7 +144,7 @@ describe('Response', function () {
     })
 
     it('should finish a response and accept a buffer', function (done) {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.end(Buffer.from(['abc']), checkCompleted)
 
       function checkCompleted () {
@@ -149,7 +157,7 @@ describe('Response', function () {
     })
 
     it('should do nothing if response already finished', function (done) {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       var called = 0
       res.end(checkCompleted)
       res.end(checkCompleted)
@@ -165,13 +173,13 @@ describe('Response', function () {
 
   describe('#sendDate', function () {
     it('should send date header by default', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.end()
       assert.ok(res.getHeader('date'), 'should have set date header.')
     })
 
     it('should be able to disable date header', function () {
-      var res = new http.ServerResponse()
+      var res = createServerResponse()
       res.sendDate = false
       res.end()
       assert.ok(!res.getHeader('date'), 'should have set date header.')

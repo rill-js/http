@@ -33,13 +33,13 @@ describe('Server', function () {
     })
   })
 
-  describe('#navigate', function () {
+  describe('#fetch', function () {
     it('should emit a new request', function (done) {
       var called = 0
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        server.navigate('/test')
+        server.fetch('/test')
       })
 
       function checkCompleted (req, res) {
@@ -55,7 +55,7 @@ describe('Server', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        server.navigate('/test').then(function (res) {
+        server.fetch('/test').then(function (res) {
           assert(res.status, 200)
           assert(res.url, '/redirected')
           server.close(done)
@@ -79,7 +79,7 @@ describe('Server', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        server.navigate('/test', { redirect: 'manual' }).then(function (res) {
+        server.fetch('/test', { redirect: 'manual' }).then(function (res) {
           assert(res.status, 200)
           assert(res.url, '/test')
           server.close(done)
@@ -101,7 +101,7 @@ describe('Server', function () {
     it('should accept a fetch request', function (done) {
       var server = new http.Server(checkCompleted)
       server.listen(function () {
-        server.navigate(new Request('/test', {
+        server.fetch(new Request('/test', {
           method: 'POST',
           referrer: 'http://google.ca',
           headers: new Headers({

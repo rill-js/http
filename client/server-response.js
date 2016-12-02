@@ -3,28 +3,26 @@
 var Buffer = require('buffer').Buffer
 var EventEmitter = require('events').EventEmitter
 var STATUS_CODES = require('statuses/codes.json')
+var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 function noop () {}
+
+ServerResponse._createServerResponse = createServerResponse
+module.exports = ServerResponse
 
 /**
  * Emulates nodes ServerResponse in the browser.
  * See: https://nodejs.org/api/http.html#http_class_http_serverresponse
  */
-function ServerResponse (opts, server) {
-  this._body = []
+function ServerResponse (incomingMessage) {
   this._headers = {}
-  this.socket = this.connection = { server: server }
+  this.socket = this.connection = incomingMessage.socket
 }
-var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 
 // Defaults.
 proto.statusCode = null
 proto.statusMessage = null
 proto.sendDate = true
 proto.finished = false
-
-/**
- * Make some methods noops.
- */
 proto.writeContinue =
 proto.setTimeout =
 proto.addTrailers = noop
@@ -122,9 +120,15 @@ proto.end = function end (chunk, encoding, cb) {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
-  this.headers = this._headers
   this.body = Buffer.concat(this._body)
   this.emit('finish')
 }
 
-module.exports = ServerResponse
+/**
+ * Creates a new server response object.
+ */
+function createServerResponse (incomingMessage) {
+  var serverResponse = new ServerResponse(incomingMessage)
+  serverResponse._body = []
+  return serverResponse
+}

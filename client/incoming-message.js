@@ -1,50 +1,67 @@
 'use strict'
 
 var EventEmitter = require('events').EventEmitter
-var global = require('global')
-var empty = {}
+var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype)
 
-/* istanbul ignore next */
-var document = global.document || empty
-/* istanbul ignore next */
-var navigator = global.navigator || empty
-/* istanbul ignore next */
-var location = (global.history && global.history.location) || global.location || empty
+IncomingMessage._createIncomingMessage = createIncomingMessage
+module.exports = IncomingMessage
 
 /**
  * Emulates nodes IncomingMessage in the browser.
  * See: https://nodejs.org/api/http.html#http_class_http_incomingmessage
  */
-function IncomingMessage (opts, server) {
-  this.url = opts.url
-  this.method = opts.method || 'GET'
-  this.headers = opts.headers || {}
-  this.headers['referer'] = opts.referrer
-  this.headers['date'] = (new Date()).toUTCString()
-  this.headers['host'] = location.host
-  this.headers['cookie'] = document.cookie
-  this.headers['user-agent'] = navigator.userAgent
-  this.headers['accept-language'] = navigator.language
-  this.headers['connection'] = 'keep-alive'
-  this.headers['cache-control'] = 'max-age=0'
-  this.headers['accept'] = '*/*'
-  this.socket = this.connection = {
-    server: server,
-    remoteAddress: '127.0.0.1',
-    encrypted: location.protocol === 'https:'
-  }
-  this.body = opts.body
-  this.files = opts.files
-  this._parsed = opts._parsed
-  this._scroll = opts.scroll
-  this._history = opts.history
+function IncomingMessage (socket) {
+  this.headers = {}
+  this.socket = this.connection = socket
 }
-var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype)
 
 // Defaults
 proto.httpVersionMajor = 1
 proto.httpVersionMinor = 1
 proto.httpVersion = proto.httpVersionMajor + '.' + proto.httpVersionMinor
 proto.complete = false
+proto.url = ''
 
-module.exports = IncomingMessage
+/**
+ * Creates a new incoming request and sets up some headers and other properties.
+ */
+function createIncomingMessage (request, server, options) {
+  var incommingMessage = new IncomingMessage({
+    server: server,
+    remoteAddress: '127.0.0.1',
+    encrypted: request.parsed.protocol === 'https:'
+  })
+  var parsed = request.parsed
+  var headers = incommingMessage.headers
+
+  // Set default headers.
+  headers['referer'] = headers['referer'] || request.referrer
+  headers['date'] = headers['date'] || (new Date()).toUTCString()
+  headers['host'] = headers['host'] || parsed.host
+  headers['cookie'] = headers['cookie'] || document.cookie
+  headers['user-agent'] = headers['user-agent'] || navigator.userAgent
+  headers['accept-language'] = headers['accept-language'] || navigator.language
+  headers['connection'] = headers['connection'] || 'keep-alive'
+  headers['cache-control'] = headers['cache-control'] || 'max-age=0'
+  headers['accept'] = headers['accept'] || '*/*'
+
+  // Attach headers from request.
+  request.headers.forEach(function (value, header) {
+    headers[header] = value
+  })
+
+  // Setup other properties.
+  incommingMessage.url = parsed.path + (parsed.hash || '')
+  incommingMessage.method = request.method
+  incommingMessage._request = request
+
+  // Forward some special options.
+  if (options) {
+    incommingMessage.body = options.body
+    incommingMessage.files = options.files
+    incommingMessage._scroll = options.scroll
+    incommingMessage._history = options.history
+  }
+
+  return incommingMessage
+}

@@ -24,9 +24,9 @@ function attachBrowser (server) {
   server._onSubmit = onSubmit.bind(server)
   server._onClick = onClick.bind(server)
   // Register link/form hijackers.
-  server.once('listening', onListening)
+  prependListener(server, 'once', 'listening', onListening)
   // Teardown link/form hijackers
-  server.once('close', onClosing)
+  prependListener(server, 'once', 'close', onClosing)
   return server
 }
 
@@ -37,15 +37,8 @@ function onListening () {
   window.addEventListener('popstate', this._onHistory)
   window.addEventListener('submit', this._onSubmit)
   window.addEventListener('click', this._onClick)
-  // This is hacky because the browser version of the events module does not support `prependListener`.
-  // See: https://github.com/Gozala/events/issues/29
-  if (this._events['request']) {
-    this._events['request'] = [onRequest].concat(this._events['request'])
-  } else {
-    this.on('request', onRequest)
-  }
-
-  // Trigger the initial page load (works the same as a popstate).
+  prependListener(this, 'on', 'request', onRequest)
+  // Trigger initial load event.
   this._onHistory()
 }
 
@@ -63,16 +56,14 @@ function onClosing () {
  * Handle incomming requests and add a litener for when it is complete.
  */
 function onRequest (req, res) {
-  req.once('end', onEnd)
+  res.once('finish', onFinish.bind(null, req, res))
 }
 
 /**
  * Handle completed requests.
  */
-function onEnd () {
-  var req = this
-  var res = req._res
-  var parsed = req._parsed
+function onFinish (req, res) {
+  var parsed = req._request.parsed
   var server = req.socket.server
 
   // Any navigation during a 'refresh' will cancel the refresh.
@@ -100,7 +91,7 @@ function onEnd () {
     var redirectURL = parts[1]
     // This handles refresh headers similar to browsers by waiting a timeout, then navigating.
     server._pending_refresh = setTimeout(
-      server.navigate.bind(server, redirectURL),
+      server.fetch.bind(server, redirectURL),
       timeout
     )
   }
@@ -149,7 +140,7 @@ function onEnd () {
  * Handle an a history state change (back or startup) event.
  */
 function onHistory () {
-  this.navigate(location.href, { scroll: false, history: false })
+  this.fetch(location.href, { scroll: false, history: false })
 }
 
 /*
@@ -192,12 +183,12 @@ function onSubmit (e) {
     // We delete the search part so that a query object can be used.
     delete parsed.search
     parsed.query = data.body
-    this.navigate(URL.format(parsed))
+    this.fetch(URL.format(parsed))
   } else {
     // Otherwise we submit the data as is.
     data.method = method
     data.headers = { 'content-type': contentType }
-    this.navigate(action, data)
+    this.fetch(action, data)
   }
 
   // Check for special data-noreset option (disables Automatically resetting the form.)
@@ -251,5 +242,16 @@ function onClick (e) {
 
   // Attempt to navigate internally.
   e.preventDefault()
-  this.navigate(el.href)
+  this.fetch(el.href)
+}
+
+/**
+ * Adds and event listener to the top of the stack.
+ * This is hacky because the browser version of the events module does not support `prependListener`.
+ * See: https://github.com/Gozala/events/issues/29
+ */
+function prependListener (emitter, type, name, fn) {
+  emitter[type](name, fn)
+  var events = emitter._events[name]
+  if (Array.isArray(events)) events.unshift(events.pop())
 }

@@ -32,7 +32,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return server.navigate('/test', { method: 'POST' }).then(function () {
+      return server.fetch('/test', { method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -42,7 +42,7 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return server.navigate('/test', { method: 'POST' }).then(function () {
+      return server.fetch('/test', { method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
@@ -56,9 +56,7 @@ describe('Adapter/Browser', function () {
     it('should trigger a fake browser refresh on refresh links', function (done) {
       var start
       server.once('request', handleNavigate)
-      server.listen(function () {
-        server.navigate('/test')
-      })
+      server.fetch('/test')
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -73,8 +71,7 @@ describe('Adapter/Browser', function () {
         assert(delta >= 1000, 'should be 1000ms later')
         assert(delta < 1500, 'should be 1000ms later')
         assert.equal(req.url, '/redirected', 'should have redirected')
-        res.end()
-        server.close(done)
+        res.end(done)
       }
     })
   })
