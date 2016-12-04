@@ -57,8 +57,10 @@ function createIncomingMessage (request, server, options) {
 
   // Forward some special options.
   if (options) {
-    incommingMessage.body = options.body
-    incommingMessage.files = options.files
+    if (options.form) {
+      incommingMessage.body = options.form.body
+      incommingMessage.files = options.form.files
+    }
     incommingMessage._scroll = options.scroll
     incommingMessage._history = options.history
   }

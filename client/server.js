@@ -70,7 +70,6 @@ server.fetch = function fetch (path, options) {
   var server = this
   // Create a fetch request object.
   var request = path instanceof FetchRequest ? path : new FetchRequest(path, options)
-
   // Resolve url and parse out the parts.
   request.url = URL.resolve(location.href, request.url)
   request.parsed = URL.parse(request.url)
@@ -93,7 +92,7 @@ server.fetch = function fetch (path, options) {
       var redirect = serverResponse.getHeader('location')
       if (redirect) {
         // Follow redirect if needed.
-        if (request.redirect === 'follow') {
+        if (request.redirect === undefined || request.redirect === 'follow') {
           return resolve(server.fetch(redirect))
         }
       } else {
@@ -101,7 +100,7 @@ server.fetch = function fetch (path, options) {
         referrer = request.url
       }
 
-      return resolve(new FetchResponse(Buffer.concat(serverResponse._body), {
+      return resolve(new FetchResponse(Buffer.concat(serverResponse._body).buffer, {
         url: request.url,
         status: serverResponse.statusCode,
         statusText: serverResponse.statusMessage,

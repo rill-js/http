@@ -186,9 +186,11 @@ function onSubmit (e) {
     this.fetch(URL.format(parsed))
   } else {
     // Otherwise we submit the data as is.
-    data.method = method
-    data.headers = { 'content-type': contentType }
-    this.fetch(action, data)
+    this.fetch(action, {
+      method: method,
+      headers: { 'content-type': contentType },
+      form: data
+    })
   }
 
   // Check for special data-noreset option (disables Automatically resetting the form.)
