@@ -211,17 +211,9 @@ function onClick (e) {
     e.shiftKey ||
     e.button !== 0
     ) return
+
   // Get the clicked element.
   var el = e.target
-
-  // Check for submit button and ensure it has focus.
-  // This fixes an issue with safari where buttons never get focus.
-  // Fixes form submission parsing when using buttons with values.
-  if (el.type === 'submit' && el !== document.activeElement) {
-    el.focus()
-    return
-  }
-
   // Find an <a> element that may have been clicked.
   while (el != null && el.nodeName !== 'A') el = el.parentNode
 
