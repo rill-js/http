@@ -9,7 +9,6 @@ var server = Server.prototype = Object.create(EventEmitter.prototype)
 var FetchRequest = window.Request
 var FetchResponse = window.Response
 var FetchHeaders = window.Headers
-var referrer = window.document && window.document.referrer
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
 
@@ -73,8 +72,6 @@ server.fetch = function fetch (path, options) {
   // Resolve url and parse out the parts.
   request.url = URL.resolve(location.href, request.url)
   request.parsed = URL.parse(request.url)
-  // Attach referrer (stored on each request).
-  request.referrer = request.referrer || referrer
 
   // Create a nodejs style req and res.
   var incommingMessage = IncomingMessage._createIncomingMessage(request, server, options)
@@ -95,9 +92,6 @@ server.fetch = function fetch (path, options) {
         if (request.redirect === undefined || request.redirect === 'follow') {
           return resolve(server.fetch(redirect))
         }
-      } else {
-        // Ensure referrer gets updated for non-redirects.
-        referrer = request.url
       }
 
       return resolve(new FetchResponse(Buffer.concat(serverResponse._body).buffer, {

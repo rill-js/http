@@ -18,6 +18,7 @@ module.exports = attachBrowser
  * @param {Server} server - the @rill/http server
  */
 function attachBrowser (server) {
+  server._referrer = document && document.referrer
   server._pending_refresh = null
   // Setup link/form hijackers.
   server._onHistory = onHistory.bind(server)
@@ -56,6 +57,9 @@ function onClosing () {
  * Handle incomming requests and add a litener for when it is complete.
  */
 function onRequest (req, res) {
+  // Set referrer automatically.
+  req.headers.referer = req.headers.referer || req.socket.server._referrer
+  // Trigger cleanup on request finish.
   res.once('finish', onFinish.bind(null, req, res))
 }
 
@@ -129,6 +133,7 @@ function onFinish (req, res) {
   // Don't push the same url twice.
   /* istanbul ignore next */
   if (req.headers.referer === req.url) return
+  else server._referrer = req.url
 
   // Update the href in the browser.
   if (req._history !== false) {
