@@ -40,7 +40,7 @@ function onListening () {
   window.addEventListener('click', this._onClick)
   prependListener(this, 'on', 'request', onRequest)
   // Trigger initial load event.
-  setTimeout(this._onHistory, 0)
+  this._pending_load = setTimeout(this._onHistory, 0)
 }
 
 /**
@@ -51,6 +51,8 @@ function onClosing () {
   window.removeEventListener('submit', this._onSubmit)
   window.removeEventListener('click', this._onClick)
   this.removeListener('request', onRequest)
+  clearTimeout(this._pending_load)
+  clearTimeout(this._pending_refresh)
 }
 
 /**
