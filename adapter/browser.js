@@ -40,7 +40,7 @@ function onListening () {
   window.addEventListener('click', this._onClick)
   prependListener(this, 'on', 'request', onRequest)
   // Trigger initial load event.
-  this._onHistory()
+  setTimeout(this._onHistory, 0)
 }
 
 /**

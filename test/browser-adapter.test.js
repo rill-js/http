@@ -50,7 +50,11 @@ describe('Adapter/Browser', function () {
 
   describe('refresh', function () {
     var server = adaptBrowser(http.createServer())
-    before(function (done) { server.listen(done) })
+    before(function (done) {
+      server.listen(function () {
+        setTimeout(done, 16)
+      })
+    })
     after(function (done) { server.close(done) })
 
     it('should trigger a fake browser refresh on refresh links', function (done) {
