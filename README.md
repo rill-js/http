@@ -39,11 +39,13 @@
   </a>
 </h1>
 
-Bring a nodejs style server into the client by listening to link clicks and form submissions.
-Supports modern browsers. A [whatwg-fetch polyfill](https://github.com/github/fetch) is also required for IE and safari. You can support IE9 with a [History API polyfill](https://github.com/devote/HTML5-History-API) as well.
+Bring a nodejs style server into the client by listening to link clicks and form submissions. Works in modern browsers.
 
 # Why
 People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
+
+# Browser support
+A [whatwg-fetch polyfill](https://github.com/github/fetch) is required for IE and Safari support. IE9 is also supported with a [History API polyfill](https://github.com/devote/HTML5-History-API).
 
 # Installation
 
