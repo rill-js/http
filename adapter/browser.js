@@ -3,14 +3,20 @@
 var URL = require('url')
 var window = require('global')
 var parseForm = require('parse-form')
+var IncomingMessage = require('../client/incoming-message')
+var ServerResponse = require('../client/server-response')
 var history = window.history
 var document = window.document
 var LINK = document.createElement('a')
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
+var FetchRequest = window.Request
+var FetchResponse = window.Response
+var FetchHeaders = window.Headers
 
 // Expose browser hijacker.
 module.exports = attachBrowser
+module.exports.fetch = fetch
 
 /**
  * Emulates node js http server in the browser by hijacking links and forms.
@@ -97,7 +103,7 @@ function onFinish (req, res) {
     var redirectURL = parts[1]
     // This handles refresh headers similar to browsers by waiting a timeout, then navigating.
     server._pending_refresh = setTimeout(
-      server.fetch.bind(server, redirectURL),
+      fetch.bind(null, server, redirectURL),
       timeout
     )
   }
@@ -147,7 +153,7 @@ function onFinish (req, res) {
  * Handle an a history state change (back or startup) event.
  */
 function onHistory () {
-  this.fetch(location.href, { scroll: false, history: false })
+  fetch(this, location.href, { scroll: false, history: false })
 }
 
 /*
@@ -190,10 +196,10 @@ function onSubmit (e) {
     // We delete the search part so that a query object can be used.
     delete parsed.search
     parsed.query = data.body
-    this.fetch(URL.format(parsed))
+    fetch(this, URL.format(parsed))
   } else {
     // Otherwise we submit the data as is.
-    this.fetch(action, {
+    fetch(this, action, {
       method: method,
       headers: { 'content-type': contentType },
       form: data
@@ -243,7 +249,58 @@ function onClick (e) {
 
   // Attempt to navigate internally.
   e.preventDefault()
-  this.fetch(el.href)
+  fetch(this, el.href)
+}
+
+/*
+ * Trigger a request to the provided server.
+ *
+ * @param {Server} server
+ * @param {String} url
+ * @param {Object} opts
+ * @param {Boolean} opts.scroll
+ * @api private
+ */
+function fetch (server, path, options) {
+  // Create a fetch request object.
+  var request = path instanceof FetchRequest
+    ? path
+    : new FetchRequest(URL.resolve(location.href, path), options)
+  // Resolve url and parse out the parts.
+  request.parsed = URL.parse(request.url)
+
+  // Create a nodejs style req and res.
+  var incommingMessage = IncomingMessage._createIncomingMessage(request, server, options)
+  var serverResponse = ServerResponse._createServerResponse(incommingMessage)
+
+  // Return a 'fetch' style response as a promise.
+  return new Promise(function (resolve, reject) {
+    // Wait for server response to be sent.
+    serverResponse.once('finish', function handleResponseEnd () {
+      // Marks incomming message as complete.
+      incommingMessage.complete = true
+      incommingMessage.emit('end')
+
+      // Check to see if we should redirect.
+      var redirect = serverResponse.getHeader('location')
+      if (redirect) {
+        // Follow redirect if needed.
+        if (request.redirect === undefined || request.redirect === 'follow') {
+          return resolve(fetch(server, redirect))
+        }
+      }
+
+      return resolve(new FetchResponse(Buffer.concat(serverResponse._body).buffer, {
+        url: request.url,
+        status: serverResponse.statusCode,
+        statusText: serverResponse.statusMessage,
+        headers: new FetchHeaders(serverResponse._headers)
+      }))
+    })
+
+    // Trigger request event on server.
+    server.emit('request', incommingMessage, serverResponse)
+  })
 }
 
 /**

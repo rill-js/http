@@ -40,7 +40,7 @@
 </h1>
 
 Bring a nodejs style server into the client by listening to link clicks and form submissions.
-Supports modern browsers IE10 and up. You can support IE9 with a [History API polyfill](https://github.com/devote/HTML5-History-API).
+Supports modern browsers. A [whatwg-fetch polyfill](https://github.com/github/fetch) is also required for IE and safari. You can support IE9 with a [History API polyfill](https://github.com/devote/HTML5-History-API) as well.
 
 # Why
 People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
@@ -78,6 +78,14 @@ In the future there may be more adapters for different environments such as mobi
 ```javascript
 var browserAdapter = require('@rill/http/adapter/browser')
 var server = browserAdapter(http.createServer())
+
+// Adapters also provide a 'fetch' api similar to the native fetch api to request things from a server.
+var fetch = browserAdapter.fetch
+
+// The only difference in the api is that the 'server' must be the first argument.
+fetch(server, '/test', { method: 'POST' })
+  .then(res => res.json())
+  .then(console.log.bind(console))
 ```
 
 ### Contributions

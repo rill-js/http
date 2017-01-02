@@ -5,12 +5,15 @@ var window = require('global')
 var URL = require('url')
 var assert = require('assert')
 var http = require('../client')
-var adaptBrowser = require('../adapter/browser')
+var adapter = require('../adapter/browser')
+var fetch = adapter.fetch
+var Request = global.Request
+var Headers = global.Headers
 var location = window.history.location || window.location
 
 describe('Adapter/Browser', function () {
   describe('cookies', function () {
-    var server = adaptBrowser(http.createServer())
+    var server = adapter(http.createServer())
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -32,7 +35,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return server.fetch('/test', { method: 'POST' }).then(function () {
+      return fetch(server, '/test', { method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -42,14 +45,14 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return server.fetch('/test', { method: 'POST' }).then(function () {
+      return fetch(server, '/test', { method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
   })
 
   describe('refresh', function () {
-    var server = adaptBrowser(http.createServer())
+    var server = adapter(http.createServer())
     before(function (done) {
       server.listen(function () {
         setTimeout(done, 16)
@@ -60,7 +63,7 @@ describe('Adapter/Browser', function () {
     it('should trigger a fake browser refresh on refresh links', function (done) {
       var start
       server.once('request', handleNavigate)
-      server.fetch('/test')
+      fetch(server, '/test')
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -81,7 +84,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('back', function () {
-    var server = adaptBrowser(http.createServer())
+    var server = adapter(http.createServer())
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -97,7 +100,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('<a> click', function () {
-    var server = adaptBrowser(http.createServer(function (req, res) { res.end() }))
+    var server = adapter(http.createServer(function (req, res) { res.end() }))
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -261,7 +264,7 @@ describe('Adapter/Browser', function () {
     var server
 
     beforeEach(function (done) {
-      server = adaptBrowser(http.createServer(function (req, res) {
+      server = adapter(http.createServer(function (req, res) {
         formData = req.body
         formURL = req.url
         res.end()
@@ -378,6 +381,96 @@ describe('Adapter/Browser', function () {
       })
 
       clickEl(submit)
+    })
+  })
+
+  describe('#fetch', function () {
+    it('should emit a new request', function (done) {
+      var called = 0
+      var server = new http.Server(checkCompleted)
+      server.once('request', checkCompleted)
+      server.listen(function () {
+        fetch(server, '/test')
+      })
+
+      function checkCompleted (req, res) {
+        assert(server.listening, 'server should be listening')
+        assert(req instanceof http.IncomingMessage, 'should have IncomingMessage')
+        assert(res instanceof http.ServerResponse, 'should have ServerResponse')
+        called++
+        if (called === 2) server.close(done)
+      }
+    })
+
+    it('should be able to redirect and follow redirect', function (done) {
+      var server = new http.Server()
+      server.once('request', handleNavigate)
+      server.listen(function () {
+        fetch(server, '/test').then(function (res) {
+          assert(res.status, 200)
+          assert(res.url, '/redirected')
+          server.close(done)
+        })
+      })
+
+      function handleNavigate (req, res) {
+        assert.equal(req.url, '/test', 'should have navigated')
+        server.once('request', handleRedirect)
+        res.writeHead(302, { location: '/redirected' })
+        res.end()
+      }
+
+      function handleRedirect (req, res) {
+        assert.equal(req.url, '/redirected', 'should have redirected')
+        res.end()
+      }
+    })
+
+    it('should be able to redirect and not follow redirect', function (done) {
+      var server = new http.Server()
+      server.once('request', handleNavigate)
+      server.listen(function () {
+        fetch(server, '/test', { redirect: 'manual' }).then(function (res) {
+          assert(res.status, 200)
+          assert(res.url, '/test')
+          server.close(done)
+        })
+      })
+
+      function handleNavigate (req, res) {
+        assert.equal(req.url, '/test', 'should have navigated')
+        server.once('request', handleRedirect)
+        res.writeHead(302, { location: '/redirected' })
+        res.end()
+      }
+
+      function handleRedirect (req, res) {
+        assert(false, 'should not have redirected')
+      }
+    })
+
+    it('should accept a fetch request', function (done) {
+      var server = new http.Server(checkCompleted)
+      server.listen(function () {
+        fetch(server, new Request('/test', {
+          method: 'POST',
+          referrer: 'http://google.ca',
+          headers: new Headers({
+            a: 1,
+            b: 2
+          })
+        }))
+      })
+
+      function checkCompleted (req, res) {
+        assert(server.listening, 'server should be listening')
+        assert(req instanceof http.IncomingMessage, 'should have IncomingMessage')
+        assert(res instanceof http.ServerResponse, 'should have ServerResponse')
+        assert(req.url, '/test', 'should have proper url')
+        assert(req.headers['a'], '1', 'should have copied headers')
+        assert(req.headers['b'], '2', 'should have copied headers')
+        server.close(done)
+      }
     })
   })
 })
