@@ -11,8 +11,8 @@ var LINK = document.createElement('a')
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
 var FetchRequest = window.Request
-var FetchResponse = window.Response
 var FetchHeaders = window.Headers
+var FetchResponse = window.Response
 
 // Expose browser hijacker.
 module.exports = attachBrowser

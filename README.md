@@ -85,6 +85,7 @@ var server = browserAdapter(http.createServer())
 var fetch = browserAdapter.fetch
 
 // The only difference in the api is that the 'server' must be the first argument.
+// Also note that the full response api does not exist in browsers lacking fetch (use a polyfill).
 fetch(server, '/test', { method: 'POST' })
   .then(res => res.json())
   .then(console.log.bind(console))
