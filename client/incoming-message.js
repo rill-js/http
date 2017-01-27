@@ -35,15 +35,15 @@ function createIncomingMessage (request, server, options) {
   var headers = incommingMessage.headers
 
   // Set default headers.
-  headers['referer'] = headers['referer'] || request.referrer
-  headers['date'] = headers['date'] || (new Date()).toUTCString()
-  headers['host'] = headers['host'] || parsed.host
-  headers['cookie'] = headers['cookie'] || document.cookie
-  headers['user-agent'] = headers['user-agent'] || navigator.userAgent
-  headers['accept-language'] = headers['accept-language'] || navigator.language
-  headers['connection'] = headers['connection'] || 'keep-alive'
-  headers['cache-control'] = headers['cache-control'] || 'max-age=0'
-  headers['accept'] = headers['accept'] || '*/*'
+  headers['referer'] = headers['referer'] || headers['referrer']
+  headers['date'] = (new Date()).toUTCString()
+  headers['host'] = parsed.host
+  headers['cookie'] = document.cookie
+  headers['user-agent'] = navigator.userAgent
+  headers['accept-language'] = navigator.language
+  headers['connection'] = 'keep-alive'
+  headers['cache-control'] = 'max-age=0'
+  headers['accept'] = '*/*'
 
   // Attach headers from request.
   request.headers.forEach(function (value, header) {
