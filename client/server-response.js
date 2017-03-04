@@ -1,8 +1,9 @@
 'use strict'
 
-var Buffer = require('buffer').Buffer
+var window = require('global')
 var EventEmitter = require('events').EventEmitter
 var STATUS_CODES = require('statuses/codes.json')
+var Blob = window.Blob
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 function noop () {}
 
@@ -31,7 +32,7 @@ proto.addTrailers = noop
  * Writes to the response body.
  */
 proto.write = function (chunk, encoding, cb) {
-  this._body.push(Buffer.from(chunk))
+  this._body.push(chunk)
 
   if (typeof encoding === 'function') {
     cb = encoding
@@ -102,7 +103,7 @@ proto.end = function end (chunk, encoding, cb) {
   }
 
   if (chunk != null) {
-    this._body.push(Buffer.from(chunk))
+    this._body.push(chunk)
   }
 
   if (typeof cb === 'function') {
@@ -120,7 +121,7 @@ proto.end = function end (chunk, encoding, cb) {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
-  this.body = Buffer.concat(this._body)
+  this.body = new Blob(this._body, { type: this.getHeader('Content-Type') })
   this.emit('finish')
 }
 

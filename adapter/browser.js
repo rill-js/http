@@ -290,7 +290,7 @@ function fetch (server, path, options) {
         }
       }
 
-      return resolve(new FetchResponse(Buffer.concat(serverResponse._body).buffer, {
+      return resolve(new FetchResponse(serverResponse.body, {
         url: request.url,
         status: serverResponse.statusCode,
         statusText: serverResponse.statusMessage,
