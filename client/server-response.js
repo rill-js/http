@@ -1,7 +1,7 @@
 'use strict'
 
 var window = require('global')
-var EventEmitter = require('events').EventEmitter
+var EventEmitter = require('events-light')
 var STATUS_CODES = require('statuses/codes.json')
 var Blob = window.Blob
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
