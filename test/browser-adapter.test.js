@@ -385,6 +385,14 @@ describe('Adapter/Browser', function () {
   })
 
   describe('#fetch', function () {
+    it('should fail with invalid options', function (done) {
+      var server = new http.Server()
+      fetch(server, 1).catch(function (err) {
+        assert.equal(err.name, 'TypeError')
+        done()
+      })
+    })
+
     it('should emit a new request', function (done) {
       var called = 0
       var server = new http.Server(checkCompleted)

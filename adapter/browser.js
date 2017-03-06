@@ -1,13 +1,13 @@
 'use strict'
 
-var URL = require('url')
 var window = require('global')
+var URL = require('mini-url')
+var QS = require('mini-querystring')
 var parseForm = require('parse-form')
 var IncomingMessage = require('../client/incoming-message')
 var ServerResponse = require('../client/server-response')
 var history = window.history
 var document = window.document
-var LINK = document.createElement('a')
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
 var FetchRequest = window.Request
@@ -31,9 +31,9 @@ function attachBrowser (server) {
   server._onSubmit = onSubmit.bind(server)
   server._onClick = onClick.bind(server)
   // Register link/form hijackers.
-  prependListener(server, 'once', 'listening', onListening)
+  server.prependListener('listening', onListening)
   // Teardown link/form hijackers
-  prependListener(server, 'once', 'close', onClosing)
+  server.prependListener('close', onClosing)
   return server
 }
 
@@ -44,7 +44,7 @@ function onListening () {
   window.addEventListener('popstate', this._onHistory)
   window.addEventListener('submit', this._onSubmit)
   window.addEventListener('click', this._onClick)
-  prependListener(this, 'on', 'request', onRequest)
+  this.prependListener('request', onRequest)
   // Trigger initial load event.
   this._pending_load = setTimeout(this._onHistory, 0)
 }
@@ -121,7 +121,7 @@ function onFinish (req, res) {
    * This is similar to how browsers handle page transitions natively.
    */
   if (req._scroll !== false) {
-    if (parsed.hash == null) window.scrollTo(0, 0)
+    if (parsed.hash === '') window.scrollTo(0, 0)
     else {
       var target = document.getElementById(parsed.hash.slice(1))
       /* istanbul ignore next */
@@ -169,6 +169,8 @@ function onSubmit (e) {
   var el = e.target
   /* istanbul ignore next */
   var action = el.action || el.getAttribute('action') || ''
+  // Parse out host and protocol.
+  var parsed = URL.parse(action, location.href)
   /* istanbul ignore next */
   var method = (el.method || el.getAttribute('method') || 'GET').toUpperCase()
   /* istanbul ignore next */
@@ -176,12 +178,10 @@ function onSubmit (e) {
 
   // Ignore the click if the element has a target.
   if (el.target && el.target !== '_self') return
-  // Assign action to link href to parse out host and protocol.
-  LINK.href = action
   // Ignore links from different host.
-  if (LINK.host && LINK.host !== location.host) return
+  if (parsed.host !== location.host) return
   // Ignore links from different protocol.
-  if (LINK.protocol && LINK.protocol !== ':' && LINK.protocol !== location.protocol) return
+  if (parsed.protocol !== location.protocol) return
 
   // Prevent default request.
   e.preventDefault()
@@ -192,11 +192,7 @@ function onSubmit (e) {
   // Parse form data into javascript object.
   if (method === 'GET') {
     // On a get request a forms body is converted into a query string.
-    var parsed = URL.parse(action)
-    // We delete the search part so that a query object can be used.
-    delete parsed.search
-    parsed.query = data.body
-    fetch(this, URL.format(parsed))
+    fetch(this, parsed.pathname + '?' + QS.stringify(data.body, true) + parsed.hash)
   } else {
     // Otherwise we submit the data as is.
     fetch(this, action, {
@@ -261,20 +257,25 @@ function onClick (e) {
  * @param {Boolean} opts.scroll
  * @api private
  */
-function fetch (server, path, options) {
-  // Create a fetch request object.
-  var request = path instanceof FetchRequest
-    ? path
-    : new FetchRequest(URL.resolve(location.href, path), options)
-  // Resolve url and parse out the parts.
-  request.parsed = URL.parse(request.url)
-
-  // Create a nodejs style req and res.
-  var incommingMessage = IncomingMessage._createIncomingMessage(request, server, options)
-  var serverResponse = ServerResponse._createServerResponse(incommingMessage)
+function fetch (server, request, options) {
+  // Parse request.
+  if (typeof request === 'string') {
+    var parsed = URL.parse(request, location.href)
+    request = new FetchRequest(parsed.href, options)
+    request.parsed = parsed
+  } else if (request instanceof FetchRequest) {
+    // Allow for usage of fetch request objects
+    request.parsed = URL.parse(request.url, location.href)
+  } else {
+    return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: Unsupported fetch path type.'))
+  }
 
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
+    // Create a nodejs style req and res.
+    var incommingMessage = IncomingMessage._createIncomingMessage(request, server, options)
+    var serverResponse = ServerResponse._createServerResponse(incommingMessage)
+
     // Wait for server response to be sent.
     serverResponse.once('finish', function handleResponseEnd () {
       // Marks incomming message as complete.
@@ -301,15 +302,4 @@ function fetch (server, path, options) {
     // Trigger request event on server.
     server.emit('request', incommingMessage, serverResponse)
   })
-}
-
-/**
- * Adds and event listener to the top of the stack.
- * This is hacky because the browser version of the events module does not support `prependListener`.
- * See: https://github.com/Gozala/events/issues/29
- */
-function prependListener (emitter, type, name, fn) {
-  emitter[type](name, fn)
-  var events = emitter._events[name]
-  if (Array.isArray(events)) events.unshift(events.pop())
 }

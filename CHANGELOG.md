@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.0.0 - 2017-03-5
+### Changed
+- Switched to custom url/querystring parser and serializer. Optimized file size.
+
 ## 3.1.0 - 2017-03-4
 ### Changed
 - No longer use node's buffer module to build response body's. Now uses blobs (ie10+).

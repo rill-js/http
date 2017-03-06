@@ -1,7 +1,7 @@
 'use strict'
 
 require('./polyfill')
-var URL = require('url')
+var URL = require('mini-url')
 var assert = require('assert')
 var window = require('global')
 var http = require('../client')
@@ -14,8 +14,7 @@ var location = (window.history && window.history.location) || window.location ||
  */
 function createIncomingMessage (path, opts) {
   var request = new FetchRequest(path, opts)
-  request.url = URL.resolve(location.href, request.url)
-  request.parsed = URL.parse(request.url)
+  request.parsed = URL.parse(request.url, location.href)
   return new http.IncomingMessage._createIncomingMessage(request, {}, opts)
 }
 

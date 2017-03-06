@@ -51,7 +51,7 @@ function createIncomingMessage (request, server, options) {
   })
 
   // Setup other properties.
-  incommingMessage.url = parsed.path + (parsed.hash || '')
+  incommingMessage.url = parsed.pathname + parsed.search + parsed.hash
   incommingMessage.method = request.method
   incommingMessage._request = request
 
