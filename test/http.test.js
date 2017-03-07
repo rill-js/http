@@ -2,7 +2,7 @@
 
 require('./polyfill')
 var assert = require('assert')
-var EventEmitter = require('events').EventEmitter
+var EventEmitter = require('events-light').EventEmitter
 var http = require('../client')
 
 describe('HTTP', function () {

@@ -192,7 +192,13 @@ function onSubmit (e) {
   // Parse form data into javascript object.
   if (method === 'GET') {
     // On a get request a forms body is converted into a query string.
-    fetch(this, parsed.pathname + '?' + QS.stringify(data.body, true) + parsed.hash)
+    fetch(this, URL.stringify({
+      protocol: parsed.protocol,
+      host: parsed.host,
+      pathname: parsed.pathname,
+      search: '?' + QS.stringify(data.body, true),
+      hash: parsed.hash
+    }))
   } else {
     // Otherwise we submit the data as is.
     fetch(this, action, {
