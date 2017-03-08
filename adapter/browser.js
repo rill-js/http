@@ -118,6 +118,7 @@ function onFinish (req, res) {
    * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
    * This is similar to how browsers handle page transitions natively.
    */
+  /* istanbul ignore next */
   if (req._scroll !== false) {
     if (parsed.hash === '') window.scrollTo(0, 0)
     else {
@@ -142,6 +143,7 @@ function onFinish (req, res) {
   else server._referrer = req.url
 
   // Update the href in the browser.
+  /* istanbul ignore next */
   if (req._history !== false) {
     history.pushState(null, document.title, req.url)
   }

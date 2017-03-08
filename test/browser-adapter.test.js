@@ -52,6 +52,22 @@ describe('Adapter/Browser', function () {
     })
   })
 
+  describe('initialize', function () {
+    var server = adapter(http.createServer())
+    before(function () {
+      server.listen()
+    })
+    after(function (done) { server.close(done) })
+
+    it('should trigger a request on load', function (done) {
+      server.once('request', handleLoad)
+
+      function handleLoad (req, res) {
+        done()
+      }
+    })
+  })
+
   describe('refresh', function () {
     var server = adapter(http.createServer(), false)
     before(function (done) {
@@ -272,8 +288,7 @@ describe('Adapter/Browser', function () {
         formData = req.body
         formURL = req.url
         res.end()
-      })).listen(done), false
-
+      }), false).listen(done)
     })
     afterEach(function (done) {
       formData = formURL = undefined

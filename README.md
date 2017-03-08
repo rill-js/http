@@ -47,6 +47,8 @@ People love node, people love the programming style and it's flexibility. This a
 # Browser support
 All modern browsers are supported including IE10+. IE9 is also supported with a [History API polyfill](https://github.com/devote/HTML5-History-API).
 
+Older browsers will also need to polyfill the Promise API, checkout [es6-promise](https://github.com/stefanpenner/es6-promise) for a good polyfill, babel-polyfill also covers this.
+
 # Installation
 
 ```console
