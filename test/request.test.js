@@ -15,7 +15,10 @@ var location = (window.history && window.history.location) || window.location ||
 function createIncomingMessage (path, opts) {
   var request = new FetchRequest(path, opts)
   request.parsed = URL.parse(request.url, location.href)
-  return new http.IncomingMessage._createIncomingMessage(request, {}, opts)
+  var incommingMessage = new http.IncomingMessage._createIncomingMessage({}, request)
+  incommingMessage.url = request.url
+  incommingMessage.body = opts && opts.body
+  return incommingMessage
 }
 
 describe('Request', function () {
@@ -23,16 +26,12 @@ describe('Request', function () {
     var opts = {
       url: '/',
       method: 'POST',
-      form: {
-        body: { hello: 'world' },
-        files: { hello: 'again' }
-      }
+      body: { hello: 'world' }
     }
     var req = createIncomingMessage(opts.url, opts)
     assert.equal(req.url, opts.url, 'should have url')
     assert.equal(req.method, opts.method, 'should have method')
-    assert.deepEqual(req.body, opts.form.body, 'should have body')
-    assert.deepEqual(req.files, opts.form.files, 'should have files')
+    assert.deepEqual(req.body, opts.body, 'should have body')
     assert(req.connection, 'should have connection')
     assert(req.socket, 'should have socket')
   })

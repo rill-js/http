@@ -6,3 +6,6 @@ require('isomorphic-fetch')
 if (!window.Headers) window.Headers = global.Headers
 if (!window.Request) window.Request = global.Request
 if (!window.Response) window.Response = global.Response
+
+// Load rejections.
+process.on('unhandledRejection', function (err) { throw err })

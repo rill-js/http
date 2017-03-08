@@ -1,9 +1,7 @@
 'use strict'
 
-var window = require('global')
 var EventEmitter = require('events-light')
 var STATUS_CODES = require('statuses/codes.json')
-var Blob = window.Blob
 var proto = ServerResponse.prototype = Object.create(EventEmitter.prototype)
 function noop () {}
 
@@ -68,10 +66,33 @@ proto.writeHead = function writeHead (statusCode, statusMessage, headers) {
 }
 
 /**
+ * Get a shallow copy of all response header names.
+ */
+proto.getHeaders = function getHeaders () {
+  var clone = {}
+  for (var key in this._headers) clone[key] = this._headers[key]
+  return clone
+}
+
+/**
+ * Get a list of current header names.
+ */
+proto.getHeaderNames = function getHeaderNames () {
+  return Object.keys(this._headers)
+}
+
+/**
  * Get a header the same as node js.
  */
 proto.getHeader = function getHeader (header) {
   return this._headers[header.toLowerCase()]
+}
+
+/**
+ * Check if a header has been set.
+ */
+proto.hasHeader = function hasHeader (header) {
+  return header.toLowerCase() in this._headers
 }
 
 /**
@@ -110,6 +131,10 @@ proto.end = function end (chunk, encoding, cb) {
     this.once('finish', cb)
   }
 
+  if (this.statusCode == null) {
+    this.statusCode = 200
+  }
+
   if (this.statusMessage == null) {
     this.statusMessage = STATUS_CODES[this.statusCode]
   }
@@ -121,7 +146,6 @@ proto.end = function end (chunk, encoding, cb) {
   this._headers['status'] = this.statusCode
   this.headersSent = true
   this.finished = true
-  this.body = new Blob(this._body, { type: this.getHeader('Content-Type') })
   this.emit('finish')
 }
 

@@ -2,17 +2,15 @@
 
 var window = require('global')
 var URL = require('mini-url')
-var QS = require('mini-querystring')
 var parseForm = require('parse-form')
+var QS = require('mini-querystring')
 var IncomingMessage = require('../client/incoming-message')
 var ServerResponse = require('../client/server-response')
+var Blob = window.Blob
 var history = window.history
 var document = window.document
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
-var FetchRequest = window.Request
-var FetchHeaders = window.Headers
-var FetchResponse = window.Response
 
 // Expose browser hijacker.
 module.exports = attachBrowser
@@ -75,7 +73,7 @@ function onRequest (req, res) {
  * Handle completed requests.
  */
 function onFinish (req, res) {
-  var parsed = req._request.parsed
+  var parsed = req._options.parsed
   var server = req.socket.server
 
   // Any navigation during a 'refresh' will cancel the refresh.
@@ -103,7 +101,7 @@ function onFinish (req, res) {
     var redirectURL = parts[1]
     // This handles refresh headers similar to browsers by waiting a timeout, then navigating.
     server._pending_refresh = setTimeout(
-      fetch.bind(null, server, redirectURL),
+      fetch.bind(null, server, { url: redirectURL }),
       timeout
     )
   }
@@ -153,7 +151,7 @@ function onFinish (req, res) {
  * Handle an a history state change (back or startup) event.
  */
 function onHistory () {
-  fetch(this, location.href, { scroll: false, history: false })
+  fetch(this, { url: location.href, scroll: false, history: false })
 }
 
 /*
@@ -173,8 +171,6 @@ function onSubmit (e) {
   var parsed = URL.parse(action, location.href)
   /* istanbul ignore next */
   var method = (el.method || el.getAttribute('method') || 'GET').toUpperCase()
-  /* istanbul ignore next */
-  var contentType = el.enctype || el.getAttribute('enctype') || 'application/x-www-form-urlencoded'
 
   // Ignore the click if the element has a target.
   if (el.target && el.target !== '_self') return
@@ -186,27 +182,8 @@ function onSubmit (e) {
   // Prevent default request.
   e.preventDefault()
 
-  // Parse out form data into a javascript object.
-  var data = parseForm(el, true)
-
-  // Parse form data into javascript object.
-  if (method === 'GET') {
-    // On a get request a forms body is converted into a query string.
-    fetch(this, URL.stringify({
-      protocol: parsed.protocol,
-      host: parsed.host,
-      pathname: parsed.pathname,
-      search: '?' + QS.stringify(data.body, true),
-      hash: parsed.hash
-    }))
-  } else {
-    // Otherwise we submit the data as is.
-    fetch(this, action, {
-      method: method,
-      headers: { 'content-type': contentType },
-      form: data
-    })
-  }
+  // Submit the form to the server.
+  fetch(this, { url: action, method: method, form: el })
 
   // Check for special data-noreset option (disables Automatically resetting the form.)
   // This is not a part of the official API because I hate the name data-reset and I feel like there should be a better approach to this.
@@ -251,7 +228,7 @@ function onClick (e) {
 
   // Attempt to navigate internally.
   e.preventDefault()
-  fetch(this, el.href)
+  fetch(this, { url: el.href })
 }
 
 /*
@@ -263,24 +240,45 @@ function onClick (e) {
  * @param {Boolean} opts.scroll
  * @api private
  */
-function fetch (server, request, options) {
-  // Parse request.
-  if (typeof request === 'string') {
-    var parsed = URL.parse(request, location.href)
-    request = new FetchRequest(parsed.href, options)
-    request.parsed = parsed
-  } else if (request instanceof FetchRequest) {
-    // Allow for usage of fetch request objects
-    request.parsed = URL.parse(request.url, location.href)
-  } else {
-    return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: Unsupported fetch path type.'))
-  }
+function fetch (server, options) {
+  if (typeof options !== 'object' || options == null) return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options must be an object.'))
+  if (typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options.url must be a string.'))
+  var parsed = options.parsed = URL.parse(options.url, location.href)
+  options.method = options.method ? options.method.toUpperCase() : 'GET'
 
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
     // Create a nodejs style req and res.
-    var incommingMessage = IncomingMessage._createIncomingMessage(request, server, options)
+    var incommingMessage = IncomingMessage._createIncomingMessage(server, options)
     var serverResponse = ServerResponse._createServerResponse(incommingMessage)
+    var search = parsed.search
+
+    // Forward some special options.
+    if (options.body) {
+      // Allow passing body through directly.
+      incommingMessage.body = options.body
+    } else if (options.form) {
+      // Or provide a form to parse.
+      var el = options.form
+      var data = parseForm(el)
+      /* istanbul ignore next */
+      incommingMessage.headers['content-type'] = el.enctype || el.getAttribute('enctype') || 'application/x-www-form-urlencoded'
+      if (options.method === 'GET') {
+        // If we have a form on a get request we replace the search.
+        search = '?' + QS.stringify(data.body, true)
+      } else {
+        // Otherwise we pass it through.
+        incommingMessage.body = data.body
+        incommingMessage.files = data.files
+      }
+    }
+
+    // Set some hidden browser specific options.
+    incommingMessage._scroll = options.scroll
+    incommingMessage._history = options.history
+
+    // Set the request url.
+    incommingMessage.url = parsed.pathname + search + parsed.hash
 
     // Wait for server response to be sent.
     serverResponse.once('finish', function handleResponseEnd () {
@@ -292,17 +290,19 @@ function fetch (server, request, options) {
       var redirect = serverResponse.getHeader('location')
       if (redirect) {
         // Follow redirect if needed.
-        if (request.redirect === undefined || request.redirect === 'follow') {
-          return resolve(fetch(server, redirect))
+        if (options.redirect === undefined || options.redirect === 'follow') {
+          return resolve(fetch(server, { url: redirect }))
         }
       }
 
-      return resolve(new FetchResponse(serverResponse.body, {
-        url: request.url,
+      // Send out final response data and meta data.
+      // This format allows for new Response(...data) when paired with the fetch api.
+      return resolve([new Blob(serverResponse._body, { type: serverResponse.getHeader('Content-Type') }), {
+        url: incommingMessage.url,
+        headers: serverResponse.getHeaders(),
         status: serverResponse.statusCode,
-        statusText: serverResponse.statusMessage,
-        headers: new FetchHeaders(serverResponse._headers)
-      }))
+        statusText: serverResponse.statusMessage
+      }])
     })
 
     // Trigger request event on server.

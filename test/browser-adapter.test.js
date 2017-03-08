@@ -8,7 +8,6 @@ var http = require('../client')
 var adapter = require('../adapter/browser')
 var fetch = adapter.fetch
 var Request = global.Request
-var Headers = global.Headers
 var location = window.history.location || window.location
 
 describe('Adapter/Browser', function () {
@@ -35,7 +34,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return fetch(server, '/test', { method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -45,7 +44,7 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return fetch(server, '/test', { method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST' }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
@@ -63,7 +62,7 @@ describe('Adapter/Browser', function () {
     it('should trigger a fake browser refresh on refresh links', function (done) {
       var start
       server.once('request', handleNavigate)
-      fetch(server, '/test')
+      fetch(server, { url: '/test' })
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -389,7 +388,10 @@ describe('Adapter/Browser', function () {
       var server = new http.Server()
       fetch(server, 1).catch(function (err) {
         assert.equal(err.name, 'TypeError')
-        done()
+        fetch(server, {}).catch(function (err) {
+          assert.equal(err.name, 'TypeError')
+          done()
+        })
       })
     })
 
@@ -398,7 +400,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        fetch(server, '/test')
+        fetch(server, { url: '/test' })
       })
 
       function checkCompleted (req, res) {
@@ -410,11 +412,31 @@ describe('Adapter/Browser', function () {
       }
     })
 
+    it('should pass through body option', function (done) {
+      var startup = true
+      var server = new http.Server(checkCompleted)
+      server.once('request', checkCompleted)
+      server.listen(function () {
+        fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
+      })
+
+      function checkCompleted (req, res) {
+        if (startup) {
+          startup = false
+          return
+        }
+
+        assert.deepEqual(req.body, { a: 1 }, 'should have passed through body')
+        done()
+      }
+    })
+
     it('should be able to redirect and follow redirect', function (done) {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, '/test').then(function (res) {
+        fetch(server, { url: '/test' }).then(function (data) {
+          var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/redirected')
           server.close(done)
@@ -438,7 +460,8 @@ describe('Adapter/Browser', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, '/test', { redirect: 'manual' }).then(function (res) {
+        fetch(server, { url: '/test', redirect: 'manual' }).then(function (data) {
+          var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/test')
           server.close(done)
@@ -463,10 +486,10 @@ describe('Adapter/Browser', function () {
         fetch(server, new Request('/test', {
           method: 'POST',
           referrer: 'http://google.ca',
-          headers: new Headers({
+          headers: {
             a: 1,
             b: 2
-          })
+          }
         }))
       })
 

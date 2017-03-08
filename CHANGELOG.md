@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## 4.0.0 - 2017-03-5
 ### Changed
 - Switched to custom url/querystring parser and serializer. Optimized file size.
+- Reduced fetch api flexability to make fetch polyfill optional.
+- Fetch api now supports a 'form' option which will automatically parse forms.
 
 ## 3.1.0 - 2017-03-4
 ### Changed

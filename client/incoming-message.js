@@ -25,16 +25,16 @@ proto.url = ''
 /**
  * Creates a new incoming request and sets up some headers and other properties.
  */
-function createIncomingMessage (request, server, options) {
+function createIncomingMessage (server, options) {
+  var parsed = options.parsed
   var incommingMessage = new IncomingMessage({
     server: server,
     remoteAddress: '127.0.0.1',
-    encrypted: request.parsed.protocol === 'https:'
+    encrypted: parsed.protocol === 'https:'
   })
-  var parsed = request.parsed
-  var headers = incommingMessage.headers
 
   // Set default headers.
+  var headers = incommingMessage.headers
   headers['referer'] = headers['referer'] || headers['referrer']
   headers['date'] = (new Date()).toUTCString()
   headers['host'] = parsed.host
@@ -45,25 +45,25 @@ function createIncomingMessage (request, server, options) {
   headers['cache-control'] = 'max-age=0'
   headers['accept'] = '*/*'
 
-  // Attach headers from request.
-  request.headers.forEach(function (value, header) {
-    headers[header] = value
-  })
-
-  // Setup other properties.
-  incommingMessage.url = parsed.pathname + parsed.search + parsed.hash
-  incommingMessage.method = request.method
-  incommingMessage._request = request
-
-  // Forward some special options.
-  if (options) {
-    if (options.form) {
-      incommingMessage.body = options.form.body
-      incommingMessage.files = options.form.files
-    }
-    incommingMessage._scroll = options.scroll
-    incommingMessage._history = options.history
+  // Attach headers from request
+  var reqHeaders = toHeaders(options.headers)
+  for (var header in reqHeaders) {
+    headers[header] = reqHeaders[header]
   }
 
+  // Setup other properties.
+  incommingMessage.method = options.method
+  incommingMessage._options = options
+
   return incommingMessage
+}
+
+/**
+ * Converts a headers object to a regular object.
+ */
+function toHeaders (headers) {
+  if (headers == null || typeof headers.forEach !== 'function') return headers
+  var result = {}
+  headers.forEach(function (value, header) { result[header] = value })
+  return result
 }
