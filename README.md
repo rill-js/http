@@ -85,7 +85,7 @@ var server = browserAdapter(http.createServer())
 var fetch = browserAdapter.fetch
 
 // Also note that the full response api does not exist in browsers lacking fetch (use a polyfill).
-fetch(server, '/test', { method: 'POST' })
+fetch(server, { url: '/test', method: 'POST' })
   .then(([body, res]) => {
     // body will be a blob of data created from the response.
     // res contains response meta data (status, statusText, headers and url).
