@@ -52,7 +52,7 @@ function createIncomingMessage (server, options) {
   }
 
   // Setup other properties.
-  incommingMessage.method = options.method
+  incommingMessage.method = options.method ? options.method.toUpperCase() : 'GET'
   incommingMessage._options = options
 
   return incommingMessage

@@ -168,8 +168,6 @@ function onSubmit (e) {
   var action = el.action || el.getAttribute('action') || ''
   // Parse out host and protocol.
   var parsed = URL.parse(action, location.href)
-  /* istanbul ignore next */
-  var method = (el.method || el.getAttribute('method') || 'GET').toUpperCase()
 
   // Ignore the click if the element has a target.
   if (el.target && el.target !== '_self') return
@@ -182,7 +180,8 @@ function onSubmit (e) {
   e.preventDefault()
 
   // Submit the form to the server.
-  fetch(this, { url: action, method: method, form: el })
+  /* istanbul ignore next */
+  fetch(this, { url: action, method: el.method || el.getAttribute('method'), form: el })
 
   // Check for special data-noreset option (disables Automatically resetting the form.)
   // This is not a part of the official API because I hate the name data-reset and I feel like there should be a better approach to this.
@@ -243,7 +242,6 @@ function fetch (server, options) {
   if (typeof options !== 'object' || options == null) return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options must be an object.'))
   if (typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options.url must be a string.'))
   var parsed = options.parsed = URL.parse(options.url, location.href)
-  options.method = options.method ? options.method.toUpperCase() : 'GET'
 
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
@@ -262,7 +260,7 @@ function fetch (server, options) {
       var data = parseForm(el)
       /* istanbul ignore next */
       incommingMessage.headers['content-type'] = el.enctype || el.getAttribute('enctype') || 'application/x-www-form-urlencoded'
-      if (options.method === 'GET') {
+      if (incommingMessage.method === 'GET') {
         // If we have a form on a get request we replace the search.
         search = '?' + QS.stringify(data.body, true)
       } else {
