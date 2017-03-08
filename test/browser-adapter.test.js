@@ -12,8 +12,10 @@ var location = window.history.location || window.location
 
 describe('Adapter/Browser', function () {
   describe('cookies', function () {
-    var server = adapter(http.createServer())
-    before(function (done) { server.listen(done) })
+    var server = adapter(http.createServer(), false)
+    before(function (done) {
+      server.listen(done)
+    })
     after(function (done) { server.close(done) })
 
     // Clear existing cookies.
@@ -51,15 +53,14 @@ describe('Adapter/Browser', function () {
   })
 
   describe('refresh', function () {
-    var server = adapter(http.createServer())
+    var server = adapter(http.createServer(), false)
     before(function (done) {
-      server.listen(function () {
-        setTimeout(done, 16)
-      })
+      server.listen(done)
     })
     after(function (done) { server.close(done) })
 
     it('should trigger a fake browser refresh on refresh links', function (done) {
+      this.timeout(3000)
       var start
       server.once('request', handleNavigate)
       fetch(server, { url: '/test' })
@@ -74,8 +75,8 @@ describe('Adapter/Browser', function () {
 
       function handleRedirect (req, res) {
         var delta = new Date() - start
-        assert(delta >= 1000, 'should be 1000ms later')
-        assert(delta < 1500, 'should be 1000ms later')
+        assert(delta >= 700, 'should be 1000ms later')
+        assert(delta < 2500, 'should be 1000ms later')
         assert.equal(req.url, '/redirected', 'should have redirected')
         res.end(done)
       }
@@ -83,8 +84,10 @@ describe('Adapter/Browser', function () {
   })
 
   describe('back', function () {
-    var server = adapter(http.createServer())
-    before(function (done) { server.listen(done) })
+    var server = adapter(http.createServer(), false)
+    before(function (done) {
+      server.listen(done)
+    })
     after(function (done) { server.close(done) })
 
     it('should handle popstate', function (done) {
@@ -99,8 +102,10 @@ describe('Adapter/Browser', function () {
   })
 
   describe('<a> click', function () {
-    var server = adapter(http.createServer(function (req, res) { res.end() }))
-    before(function (done) { server.listen(done) })
+    var server = adapter(http.createServer(function (req, res) { res.end() }), false)
+    before(function (done) {
+      server.listen(done)
+    })
     after(function (done) { server.close(done) })
 
     it('should handle internal links', function (done) {
@@ -267,7 +272,8 @@ describe('Adapter/Browser', function () {
         formData = req.body
         formURL = req.url
         res.end()
-      })).listen(done)
+      })).listen(done), false
+
     })
     afterEach(function (done) {
       formData = formURL = undefined
@@ -520,9 +526,11 @@ function createEl (tag, attrs) {
  * Triggers a fake click event.
  */
 function clickEl (el) {
-  var ev = document.createEvent('MouseEvent')
-  ev.initMouseEvent('click', true, true, window, null, 0, 0, 0, 0, false, false, false, false, 0, null)
-  el.dispatchEvent(ev)
+  setTimeout(function () {
+    var ev = document.createEvent('MouseEvent')
+    ev.initMouseEvent('click', true, true, window, null, 0, 0, 0, 0, false, false, false, false, 0, null)
+    el.dispatchEvent(ev)
+  }, 16)
 }
 
 /**

@@ -20,8 +20,9 @@ module.exports.fetch = fetch
  *
  * @param {Server} server - the @rill/http server
  */
-function attachBrowser (server) {
+function attachBrowser (server, initialize) {
   server._referrer = document && document.referrer
+  server._initialize = initialize !== false
   server._pending_refresh = null
   // Setup link/form hijackers.
   server._onHistory = onHistory.bind(server)
@@ -43,7 +44,7 @@ function onListening () {
   window.addEventListener('click', this._onClick)
   this.prependListener('request', onRequest)
   // Trigger initial load event.
-  this._pending_load = setTimeout(this._onHistory, 0)
+  this._pending_load = this._initialize && setTimeout(this._onHistory, 0)
 }
 
 /**
@@ -242,7 +243,6 @@ function fetch (server, options) {
   if (typeof options !== 'object' || options == null) return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options must be an object.'))
   if (typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options.url must be a string.'))
   var parsed = options.parsed = URL.parse(options.url, location.href)
-
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
     // Create a nodejs style req and res.

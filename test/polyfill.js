@@ -1,5 +1,8 @@
+'use strict'
+
 // Polyfill history and fetch api's
 require('html5-history-api')
+require('es6-promise/auto')
 require('isomorphic-fetch')
 
 // Patch jsdom with the fetch api.
