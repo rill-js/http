@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - Switched to custom url/querystring parser and serializer. Optimized file size.
 - Reduced fetch api flexability to make fetch polyfill optional.
 - Fetch api now supports a 'form' option which will automatically parse forms.
+- Fetch api now sends out body as a regular array, moved blob creation to userland as per readme.
 
 ## 3.1.0 - 2017-03-4
 ### Changed

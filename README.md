@@ -90,7 +90,8 @@ fetch(server, { url: '/test', method: 'POST' })
     // body will be a blob of data created from the response.
     // res contains response meta data (status, statusText, headers and url).
     // You can easily convert this to a native fetch response as well.
-    return new Response(body, res)
+    const blob = new Blob(body, { type: res.headers['content-type'] })
+    return new Response(blob, res)
   })
   .then((res) => res.json())
   .then(console.log.bind(console))

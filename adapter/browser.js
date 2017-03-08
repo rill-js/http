@@ -6,7 +6,6 @@ var parseForm = require('parse-form')
 var QS = require('mini-querystring')
 var IncomingMessage = require('../client/incoming-message')
 var ServerResponse = require('../client/server-response')
-var Blob = window.Blob
 var history = window.history
 var document = window.document
 /* istanbul ignore next */
@@ -297,7 +296,7 @@ function fetch (server, options) {
 
       // Send out final response data and meta data.
       // This format allows for new Response(...data) when paired with the fetch api.
-      return resolve([new Blob(serverResponse._body, { type: serverResponse.getHeader('Content-Type') }), {
+      return resolve([serverResponse._body, {
         url: incommingMessage.url,
         headers: serverResponse.getHeaders(),
         status: serverResponse.statusCode,
