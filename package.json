@@ -7,6 +7,7 @@
   "bugs": "https://github.com/rill-js/http/issues",
   "dependencies": {
     "events-light": "^1.0.5",
+    "get-loc": "^1.0.0",
     "global": "^4.3.1",
     "mini-querystring": "^1.0.2",
     "mini-url": "^1.1.2",
