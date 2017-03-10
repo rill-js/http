@@ -4,12 +4,11 @@ var window = require('global')
 var URL = require('mini-url')
 var parseForm = require('parse-form')
 var QS = require('mini-querystring')
+var location = require('get-loc')()
 var IncomingMessage = require('../client/incoming-message')
 var ServerResponse = require('../client/server-response')
 var history = window.history
 var document = window.document
-/* istanbul ignore next */
-var location = (window.history && window.history.location) || window.location || { href: '' }
 
 // Expose browser hijacker.
 module.exports = attachBrowser
@@ -220,12 +219,12 @@ function onClick (e) {
   if (el.target && el.target !== '_self') return
   // Ignore 'rel="external"' links.
   if (el.rel && el.rel === 'external') return
+  // Ignore download links
+  if (el.hasAttribute('download')) return
   // Ignore links from different host.
   if (el.host && el.host !== location.host) return
   // Ignore links from different protocol.
   if (el.protocol && el.protocol !== ':' && el.protocol !== location.protocol) return
-  // Ignore download links
-  if (el.hasAttribute('download')) return
 
   // Attempt to navigate internally.
   e.preventDefault()
