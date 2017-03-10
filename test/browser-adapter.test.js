@@ -11,6 +11,25 @@ var Request = global.Request
 var location = window.history.location || window.location
 
 describe('Adapter/Browser', function () {
+  before(function () {
+    window.addEventListener('beforeunload', preventNavigation, false)
+    window.addEventListener('unload', preventNavigation, false)
+  })
+
+  after(function () {
+    window.removeEventListener('beforeunload', preventNavigation)
+    window.removeEventListener('unload', preventNavigation)
+  })
+
+  function preventNavigation () {
+    var originalHashValue = location.hash
+
+    window.setTimeout(function () {
+      location.hash = 'preventNavigation' + ~~(9999 * Math.random())
+      location.hash = originalHashValue
+    }, 0)
+  }
+
   describe('cookies', function () {
     var server = adapter(http.createServer(), false)
     before(function (done) {
@@ -314,7 +333,7 @@ describe('Adapter/Browser', function () {
     })
 
     it('should handle internal GET forms with querystring', function (done) {
-      var testURL = '/test-interlal-get-form'
+      var testURL = '/test-internal-get-form'
       var el = createEl('form', { action: testURL, method: 'GET' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
@@ -506,7 +525,6 @@ describe('Adapter/Browser', function () {
       server.listen(function () {
         fetch(server, new Request('/test', {
           method: 'POST',
-          referrer: 'http://google.ca',
           headers: {
             a: 1,
             b: 2
