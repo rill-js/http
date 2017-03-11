@@ -1,42 +1,27 @@
 'use strict'
 
 require('./polyfill')
-var window = require('global')
 var URL = require('url')
+var window = require('global')
 var assert = require('assert')
+var location = require('get-loc')()
 var http = require('../client')
 var adapter = require('../adapter/browser')
 var fetch = adapter.fetch
 var Request = global.Request
-var location = window.history.location || window.location
+var history = window.history
 var diffProtocol = location.protocol === 'https:' ? 'http' : 'https'
-var curTest = 0
 
 describe('Adapter/Browser', function () {
-  before(function () {
-    window.addEventListener('beforeunload', preventNavigation, false)
-    window.addEventListener('unload', preventNavigation, false)
-  })
-
+  var originalHref = location.href
   after(function () {
-    window.removeEventListener('beforeunload', preventNavigation)
-    window.removeEventListener('unload', preventNavigation)
+    if (location.href === originalHref) return
+    history.replaceState(null, '', originalHref)
   })
-
-  function preventNavigation () {
-    var originalHashValue = location.hash
-
-    window.setTimeout(function () {
-      location.hash = 'preventNavigation' + ~~(9999 * Math.random())
-      location.hash = originalHashValue
-    }, 0)
-  }
 
   describe('cookies', function () {
     var server = adapter(http.createServer(), false)
-    before(function (done) {
-      server.listen(done)
-    })
+    before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
     // Clear existing cookies.
@@ -57,7 +42,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return fetch(server, { url: '/test', method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -67,7 +52,7 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return fetch(server, { url: '/test', method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
@@ -75,9 +60,7 @@ describe('Adapter/Browser', function () {
 
   describe('initialize', function () {
     var server = adapter(http.createServer())
-    before(function () {
-      server.listen()
-    })
+    before(function () { server.listen() })
     after(function (done) { server.close(done) })
 
     it('should trigger a request on load', function (done) {
@@ -91,16 +74,14 @@ describe('Adapter/Browser', function () {
 
   describe('refresh', function () {
     var server = adapter(http.createServer(), false)
-    before(function (done) {
-      server.listen(done)
-    })
+    before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
     it('should trigger a fake browser refresh on refresh links', function (done) {
       this.timeout(3000)
       var start
       server.once('request', handleNavigate)
-      fetch(server, { url: '/test' })
+      fetch(server, { url: '/test', history: false })
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -122,9 +103,7 @@ describe('Adapter/Browser', function () {
 
   describe('back', function () {
     var server = adapter(http.createServer(), false)
-    before(function (done) {
-      server.listen(done)
-    })
+    before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
     it('should handle popstate', function (done) {
@@ -133,16 +112,14 @@ describe('Adapter/Browser', function () {
         done()
       })
 
-      window.history.pushState(null, '', location.href)
-      window.history.back()
+      history.pushState(null, '', '/new-page')
+      history.back()
     })
   })
 
   describe('<a> click', function () {
     var server = adapter(http.createServer(function (req, res) { res.end() }), false)
-    before(function (done) {
-      server.listen(done)
-    })
+    before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
     it('should handle internal links', function (done) {
@@ -227,16 +204,18 @@ describe('Adapter/Browser', function () {
       clickEl(el)
     })
 
-    it('should ignore links without an href', function (done) {
-      var el = createEl('a', {})
+    if (!history.emulate) {
+      it('should ignore links without an href', function (done) {
+        var el = createEl('a')
 
-      once('click', el, function (e) {
-        assert.ok(!e.defaultPrevented)
-        done()
+        once('click', el, function (e) {
+          assert.ok(!e.defaultPrevented)
+          done()
+        })
+
+        clickEl(el)
       })
-
-      clickEl(el)
-    })
+    }
 
     it('should ignore rel external links', function (done) {
       var el = createEl('a', { href: '/', rel: 'external' })
@@ -428,9 +407,9 @@ describe('Adapter/Browser', function () {
   describe('#fetch', function () {
     it('should fail with invalid options', function (done) {
       var server = new http.Server()
-      fetch(server, 1).catch(function (err) {
+      fetch(server, 1)['catch'](function (err) {
         assert.equal(err.name, 'TypeError')
-        fetch(server, {}).catch(function (err) {
+        fetch(server, {})['catch'](function (err) {
           assert.equal(err.name, 'TypeError')
           done()
         })
@@ -442,7 +421,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        fetch(server, { url: '/test' })
+        fetch(server, { url: '/test', history: false })
       })
 
       function checkCompleted (req, res) {
@@ -561,11 +540,10 @@ function createEl (tag, attrs) {
  * Triggers a fake click event.
  */
 function clickEl (el) {
-  setTimeout(function () {
-    var ev = document.createEvent('MouseEvent')
-    ev.initMouseEvent('click', true, true, window, null, 0, 0, 0, 0, false, false, false, false, 0, null)
-    el.dispatchEvent(ev)
-  }, 16 * ++curTest)
+  if (el.click) return el.click()
+  var ev = document.createEvent('MouseEvent')
+  ev.initMouseEvent('click', true, true, window, null, 0, 0, 0, 0, false, false, false, false, 0, null)
+  el.dispatchEvent(ev)
 }
 
 /**
@@ -574,8 +552,13 @@ function clickEl (el) {
 function once (type, el, fn) {
   window.addEventListener(type, function prevent (e) {
     if (e.target === el) {
-      fn(e)
-      e.defaultPrevented || e.preventDefault()
+      try {
+        fn(e)
+      } catch (err) {
+        throw err
+      } finally {
+        if (!e.defaultPrevented) e.preventDefault()
+      }
     }
     window.removeEventListener(type, prevent)
   }, false)

@@ -200,11 +200,11 @@ function onClick (e) {
   // Ignore canceled events, modified clicks, and right clicks.
   if (
     e.defaultPrevented ||
+    e.button ||
     e.metaKey ||
     e.ctrlKey ||
-    e.shiftKey ||
-    e.button !== 0
-    ) return
+    e.shiftKey
+  ) return
 
   // Get the clicked element.
   var el = e.target
@@ -289,7 +289,7 @@ function fetch (server, options) {
       if (redirect) {
         // Follow redirect if needed.
         if (options.redirect === undefined || options.redirect === 'follow') {
-          return resolve(fetch(server, { url: redirect }))
+          return resolve(fetch(server, { url: redirect, history: options.history, scroll: options.scroll }))
         }
       }
 
