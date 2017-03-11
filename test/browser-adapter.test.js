@@ -147,7 +147,7 @@ describe('Adapter/Browser', function () {
       var testURL = '/test-internal-link'
       var el = createEl('a', { href: testURL })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -160,7 +160,7 @@ describe('Adapter/Browser', function () {
       var testURL = '/test-internal-link#test'
       var el = createEl('a', { href: testURL })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -174,7 +174,7 @@ describe('Adapter/Browser', function () {
       var el = createEl('a', { href: testURL })
       var div = createEl('div', { id: 'test' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         div.parentNode.removeChild(div)
@@ -190,7 +190,7 @@ describe('Adapter/Browser', function () {
       var span = document.createElement('span')
       el.appendChild(span)
 
-      onClick(span, function (e) {
+      once('click', span, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -202,7 +202,7 @@ describe('Adapter/Browser', function () {
     it('should ignore non links', function (done) {
       var el = createEl('span')
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -216,7 +216,7 @@ describe('Adapter/Browser', function () {
       var el = createEl('a', { href: testURL })
 
       el.addEventListener('click', function (e) { e.preventDefault() })
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -228,7 +228,7 @@ describe('Adapter/Browser', function () {
     it('should ignore links without an href', function (done) {
       var el = createEl('a', {})
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         done()
       })
@@ -239,7 +239,7 @@ describe('Adapter/Browser', function () {
     it('should ignore rel external links', function (done) {
       var el = createEl('a', { href: '/', rel: 'external' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -251,7 +251,7 @@ describe('Adapter/Browser', function () {
     it('should ignore target links', function (done) {
       var el = createEl('a', { href: '/', target: '_blank' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -263,7 +263,7 @@ describe('Adapter/Browser', function () {
     it('should ignore different protocol links', function (done) {
       var el = createEl('a', { href: 'https://' + location.host + '/test' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -275,7 +275,7 @@ describe('Adapter/Browser', function () {
     it('should ignore links with a different host', function (done) {
       var el = createEl('a', { href: 'http://google.ca' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -287,7 +287,7 @@ describe('Adapter/Browser', function () {
     it('should ignore links with a download attribute', function (done) {
       var el = createEl('a', { href: '/test', download: 'test.file' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -322,7 +322,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
         assert.ok(formData.test)
         el.parentNode.removeChild(el)
@@ -340,7 +340,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
         var query = URL.parse(formURL, true).query
         assert.equal(query.test, 1)
@@ -360,7 +360,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(submit)
 
       el.addEventListener('submit', function (e) { e.preventDefault() })
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
         assert.equal(formData, undefined)
         el.parentNode.removeChild(el)
@@ -378,7 +378,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
         assert.equal(formData, undefined)
         el.parentNode.removeChild(el)
@@ -395,7 +395,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
         assert.equal(formData, undefined)
         el.parentNode.removeChild(el)
@@ -412,7 +412,7 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
         assert.equal(formData, undefined)
         el.parentNode.removeChild(el)
@@ -567,25 +567,14 @@ function clickEl (el) {
 }
 
 /**
- * Listen for click events using event delegation to ensure run after hijacker.
+ * Adds an event listener for on event and ensures the default is prevented.
  */
-function onClick (el, fn) {
-  window.addEventListener('click', function (e) {
+function once (type, el, fn) {
+  window.addEventListener(type, function prevent (e) {
     if (e.target === el) {
       fn(e)
-      if (!e.defaultPrevented) e.preventDefault()
+      e.defaultPrevented || e.preventDefault()
     }
-  })
-}
-
-/**
- * Listen for submit events using event delegation to ensure run after hijacker.
- */
-function onSubmit (el, fn) {
-  window.addEventListener('submit', function (e) {
-    if (e.target === el) {
-      fn(e)
-      if (!e.defaultPrevented) e.preventDefault()
-    }
-  })
+    window.removeEventListener(type, prevent)
+  }, false)
 }
