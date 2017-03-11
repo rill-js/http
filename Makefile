@@ -2,7 +2,7 @@
 NM = node_modules
 BIN = $(NM)/.bin
 TESTS_IN = test/*.test.js
-TESTS_OUT = test/run.js
+TESTS_OUT = test/_run.js
 
 # Tools
 standard = $(BIN)/standard

@@ -1,6 +1,11 @@
 {
   "name": "@rill/html",
-  "tests": "/test/index.html",
+  "port": "8080",
+  "testPath": "/test/_run.html",
+  "service": "sauce-connect",
+  "serviceOptions": {
+    "verbose": true
+  },
   "platforms": [
     ["Windows 7", "internet explorer", "9.0"],
     ["Windows 8", "internet explorer", "10.0"],
