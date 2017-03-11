@@ -9,6 +9,7 @@ var adapter = require('../adapter/browser')
 var fetch = adapter.fetch
 var Request = global.Request
 var location = window.history.location || window.location
+var diffProtocol = location.protocol === 'https:' ? 'http' : 'https'
 
 describe('Adapter/Browser', function () {
   before(function () {
@@ -261,7 +262,7 @@ describe('Adapter/Browser', function () {
     })
 
     it('should ignore different protocol links', function (done) {
-      var el = createEl('a', { href: 'file://' + location.host + '/test' })
+      var el = createEl('a', { href: diffProtocol + '://' + location.host + '/test' })
 
       once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
@@ -389,7 +390,7 @@ describe('Adapter/Browser', function () {
     })
 
     it('should ignore different protocol forms', function (done) {
-      var el = createEl('form', { action: 'file://' + location.host + '/test', method: 'POST' })
+      var el = createEl('form', { action: diffProtocol + '://' + location.host + '/test', method: 'POST' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
       el.appendChild(input)
