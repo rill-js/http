@@ -1,7 +1,7 @@
 {
   "name": "@rill/html",
   "testPath": "/test/_run.html",
-  "service": "sauce-connect",
+  "service": "ngrok",
   "platforms": [
     ["Windows 7", "internet explorer", "9.0"],
     ["Windows 8", "internet explorer", "10.0"],
