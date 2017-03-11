@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## 4.0.0 - 2017-03-5
+## 4.1.0 - 2017-03-11
 ### Changed
 - Switched to custom url/querystring parser and serializer. Optimized file size.
 - Reduced fetch api flexability to make fetch polyfill optional.
