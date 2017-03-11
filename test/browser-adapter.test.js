@@ -10,6 +10,7 @@ var fetch = adapter.fetch
 var Request = global.Request
 var location = window.history.location || window.location
 var diffProtocol = location.protocol === 'https:' ? 'http' : 'https'
+var curTest = 0
 
 describe('Adapter/Browser', function () {
   before(function () {
@@ -564,7 +565,7 @@ function clickEl (el) {
     var ev = document.createEvent('MouseEvent')
     ev.initMouseEvent('click', true, true, window, null, 0, 0, 0, 0, false, false, false, false, 0, null)
     el.dispatchEvent(ev)
-  }, 16)
+  }, 16 * ++curTest)
 }
 
 /**
