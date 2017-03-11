@@ -305,9 +305,11 @@ describe('Adapter/Browser', function () {
 
       once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        assert.ok(formData.test)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.ok(formData.test)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -323,10 +325,12 @@ describe('Adapter/Browser', function () {
 
       once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        var query = URL.parse(formURL, true).query
-        assert.equal(query.test, 1)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          var query = URL.parse(formURL, true).query
+          assert.equal(query.test, 1)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -343,9 +347,11 @@ describe('Adapter/Browser', function () {
       el.addEventListener('submit', function (e) { e.preventDefault() })
       once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -361,9 +367,11 @@ describe('Adapter/Browser', function () {
 
       once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -378,15 +386,17 @@ describe('Adapter/Browser', function () {
 
       once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
     })
 
-    it('should ignore links with a different host', function (done) {
+    it('should ignore forms with a different host', function (done) {
       var el = createEl('form', { action: 'http://google.ca', method: 'POST' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
@@ -395,9 +405,11 @@ describe('Adapter/Browser', function () {
 
       once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
