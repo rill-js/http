@@ -562,15 +562,14 @@ function clickEl (el) {
  */
 function once (type, el, fn) {
   window.addEventListener(type, function prevent (e) {
-    if (e.target === el) {
-      try {
-        fn(e)
-      } catch (err) {
-        throw err
-      } finally {
-        if (!e.defaultPrevented) e.preventDefault()
-      }
-    }
+    if (e.target !== el) return
     window.removeEventListener(type, prevent)
+    try {
+      fn(e)
+    } catch (err) {
+      throw err
+    } finally {
+      if (!e.defaultPrevented) e.preventDefault()
+    }
   }, false)
 }
