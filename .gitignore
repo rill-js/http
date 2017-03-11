@@ -9,5 +9,5 @@ node_modules
 npm-debug.log
 
 # Testing
-test/run.js
+test/_run.js
 coverage

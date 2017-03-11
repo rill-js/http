@@ -57,6 +57,9 @@
     "test-ci": "npm run lint && make test-ci"
   },
   "standard": {
+    "ignore": [
+      "test/_run.js"
+    ],
     "globals": [
       "describe",
       "it",
