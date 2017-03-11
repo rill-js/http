@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>@rill/html tests</title>
   <link href="../node_modules/mocha/mocha.css" rel="stylesheet">
 </head>
@@ -11,13 +12,13 @@
 
   <script src="../node_modules/mocha/mocha.js"></script>
   <script>
-    mocha.setup('bdd')
-    mocha.setup('exports')
+    window.mocha.setup('bdd')
+    window.mocha.setup('exports')
   </script>
-  <script src="run.js"></script>
+  <script src="_run.js"></script>
   <script>
     var fails = []
-    var runner = mocha
+    var runner = window.mocha
       .run()
       .on('fail', handleFail)
       .on('end', handleEnd)
@@ -48,7 +49,7 @@
      */
     function flattenTitles (test) {
       var titles = []
-      while (test.parent.title){
+      while (test.parent.title) {
         titles.push(test.parent.title)
         test = test.parent
       }

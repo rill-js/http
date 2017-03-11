@@ -1,9 +1,4 @@
 sudo: false
-cache:
-  directories:
-  - node_modules
-addons:
-  sauce_connect: true
 language: node_js
 node_js:
 - '6'

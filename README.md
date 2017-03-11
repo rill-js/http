@@ -45,7 +45,9 @@ Bring a nodejs style server into the client by listening to link clicks and form
 People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
 
 # Browser support
-A [whatwg-fetch polyfill](https://github.com/github/fetch) is required for IE and Safari support. IE9 is also supported with a [History API polyfill](https://github.com/devote/HTML5-History-API).
+All modern browsers are supported including IE10+. IE9 is also supported with a [History API polyfill](https://github.com/devote/HTML5-History-API).
+
+Older browsers will also need to polyfill the Promise API, checkout [es6-promise](https://github.com/stefanpenner/es6-promise) for a good polyfill, babel-polyfill also covers this.
 
 # Installation
 
@@ -84,10 +86,16 @@ var server = browserAdapter(http.createServer())
 // Adapters also provide a 'fetch' api similar to the native fetch api to request things from a server.
 var fetch = browserAdapter.fetch
 
-// The only difference in the api is that the 'server' must be the first argument.
 // Also note that the full response api does not exist in browsers lacking fetch (use a polyfill).
-fetch(server, '/test', { method: 'POST' })
-  .then(res => res.json())
+fetch(server, { url: '/test', method: 'POST' })
+  .then(([body, res]) => {
+    // body will be a blob of data created from the response.
+    // res contains response meta data (status, statusText, headers and url).
+    // You can easily convert this to a native fetch response as well.
+    const blob = new Blob(body, { type: res.headers['content-type'] })
+    return new Response(blob, res)
+  })
+  .then((res) => res.json())
   .then(console.log.bind(console))
 ```
 

@@ -1,22 +1,22 @@
 'use strict'
 
 require('./polyfill')
-var URL = require('url')
+var URL = require('mini-url')
 var assert = require('assert')
 var window = require('global')
 var http = require('../client')
-var FetchRequest = window.Request
 /* istanbul ignore next */
 var location = (window.history && window.history.location) || window.location || { href: '' }
 
 /**
  * Creates an empty incoming message.
  */
-function createIncomingMessage (path, opts) {
-  var request = new FetchRequest(path, opts)
-  request.url = URL.resolve(location.href, request.url)
-  request.parsed = URL.parse(request.url)
-  return new http.IncomingMessage._createIncomingMessage(request, {}, opts)
+function createIncomingMessage (opts) {
+  opts.parsed = URL.parse(opts.url, location.href)
+  var incommingMessage = new http.IncomingMessage._createIncomingMessage({}, opts)
+  incommingMessage.url = opts.url
+  incommingMessage.body = opts && opts.body
+  return incommingMessage
 }
 
 describe('Request', function () {
@@ -24,16 +24,12 @@ describe('Request', function () {
     var opts = {
       url: '/',
       method: 'POST',
-      form: {
-        body: { hello: 'world' },
-        files: { hello: 'again' }
-      }
+      body: { hello: 'world' }
     }
-    var req = createIncomingMessage(opts.url, opts)
+    var req = createIncomingMessage(opts)
     assert.equal(req.url, opts.url, 'should have url')
     assert.equal(req.method, opts.method, 'should have method')
-    assert.deepEqual(req.body, opts.form.body, 'should have body')
-    assert.deepEqual(req.files, opts.form.files, 'should have files')
+    assert.deepEqual(req.body, opts.body, 'should have body')
     assert(req.connection, 'should have connection')
     assert(req.socket, 'should have socket')
   })
@@ -42,7 +38,7 @@ describe('Request', function () {
     var opts = {
       url: '/'
     }
-    var req = createIncomingMessage(opts.url)
+    var req = createIncomingMessage(opts)
     assert.equal(req.url, opts.url, 'should have url')
     assert.equal(req.method, 'GET', 'should have method')
   })

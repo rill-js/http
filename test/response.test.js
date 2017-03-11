@@ -28,11 +28,13 @@ describe('Response', function () {
     })
   })
 
-  describe('#setHeader, #getHeader', function () {
+  describe('#setHeader, #hasHeader, #getHeader, #getHeaders, #getHeaderNames', function () {
     it('should set and get a header', function () {
       var res = createServerResponse()
       res.setHeader('X-Custom-Header', 'abc')
+      assert.ok(res.hasHeader('X-Custom-Header'), 'should have set header')
       assert.equal(res.getHeader('X-Custom-Header'), 'abc', 'should have set header')
+      assert.deepEqual(res.getHeaders(), { 'x-custom-header': 'abc' })
     })
 
     it('should be case insensitive', function () {
@@ -42,6 +44,8 @@ describe('Response', function () {
 
       res.setHeader('header-lower', 'abc')
       assert.equal(res.getHeader('HEADER-LOWER'), 'abc', 'should have set header')
+      assert.deepEqual(res.getHeaders(), { 'header-caps': 'abc', 'header-lower': 'abc' })
+      assert.deepEqual(res.getHeaderNames(), ['header-caps', 'header-lower'])
     })
   })
 
@@ -126,7 +130,6 @@ describe('Response', function () {
       assert.equal(res._body.length, 1, 'should have written to the body')
       res.end(Buffer.from(['efd']))
       assert.equal(res._body.length, 2, 'should have written to the body')
-      assert(res.body, 'should have created the final concatinated body')
     })
 
     it('should finish a response', function (done) {
@@ -151,7 +154,6 @@ describe('Response', function () {
         assert(res.headersSent, 'should have sent headers')
         assert(res.finished, 'should be finished')
         assert.equal(res._body.length, 1, 'should have written to the body')
-        assert(res.body, 'should have created the final concatinated body')
         done()
       }
     })

@@ -1,19 +1,26 @@
 'use strict'
 
 require('./polyfill')
-var window = require('global')
 var URL = require('url')
+var window = require('global')
 var assert = require('assert')
+var location = require('get-loc')()
 var http = require('../client')
 var adapter = require('../adapter/browser')
 var fetch = adapter.fetch
 var Request = global.Request
-var Headers = global.Headers
-var location = window.history.location || window.location
+var history = window.history
+var diffProtocol = location.protocol === 'https:' ? 'http' : 'https'
 
 describe('Adapter/Browser', function () {
+  var originalHref = location.href
+  after(function () {
+    if (location.href === originalHref) return
+    history.replaceState(null, '', originalHref)
+  })
+
   describe('cookies', function () {
-    var server = adapter(http.createServer())
+    var server = adapter(http.createServer(), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -35,7 +42,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return fetch(server, '/test', { method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -45,25 +52,36 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return fetch(server, '/test', { method: 'POST' }).then(function () {
+      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
   })
 
-  describe('refresh', function () {
+  describe('initialize', function () {
     var server = adapter(http.createServer())
-    before(function (done) {
-      server.listen(function () {
-        setTimeout(done, 16)
-      })
+    before(function () { server.listen() })
+    after(function (done) { server.close(done) })
+
+    it('should trigger a request on load', function (done) {
+      server.once('request', handleLoad)
+
+      function handleLoad (req, res) {
+        done()
+      }
     })
+  })
+
+  describe('refresh', function () {
+    var server = adapter(http.createServer(), false)
+    before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
     it('should trigger a fake browser refresh on refresh links', function (done) {
+      this.timeout(3000)
       var start
       server.once('request', handleNavigate)
-      fetch(server, '/test')
+      fetch(server, { url: '/test', history: false })
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -75,8 +93,8 @@ describe('Adapter/Browser', function () {
 
       function handleRedirect (req, res) {
         var delta = new Date() - start
-        assert(delta >= 1000, 'should be 1000ms later')
-        assert(delta < 1500, 'should be 1000ms later')
+        assert(delta >= 700, 'should be 1000ms later')
+        assert(delta < 2500, 'should be 1000ms later')
         assert.equal(req.url, '/redirected', 'should have redirected')
         res.end(done)
       }
@@ -84,7 +102,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('back', function () {
-    var server = adapter(http.createServer())
+    var server = adapter(http.createServer(), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -94,13 +112,13 @@ describe('Adapter/Browser', function () {
         done()
       })
 
-      window.history.pushState(null, '', location.href)
-      window.history.back()
+      history.pushState(null, '', '/new-page')
+      history.back()
     })
   })
 
   describe('<a> click', function () {
-    var server = adapter(http.createServer(function (req, res) { res.end() }))
+    var server = adapter(http.createServer(function (req, res) { res.end() }), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -108,7 +126,7 @@ describe('Adapter/Browser', function () {
       var testURL = '/test-internal-link'
       var el = createEl('a', { href: testURL })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -121,7 +139,7 @@ describe('Adapter/Browser', function () {
       var testURL = '/test-internal-link#test'
       var el = createEl('a', { href: testURL })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -135,7 +153,7 @@ describe('Adapter/Browser', function () {
       var el = createEl('a', { href: testURL })
       var div = createEl('div', { id: 'test' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         div.parentNode.removeChild(div)
@@ -151,7 +169,7 @@ describe('Adapter/Browser', function () {
       var span = document.createElement('span')
       el.appendChild(span)
 
-      onClick(span, function (e) {
+      once('click', span, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -163,7 +181,7 @@ describe('Adapter/Browser', function () {
     it('should ignore non links', function (done) {
       var el = createEl('span')
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -177,7 +195,7 @@ describe('Adapter/Browser', function () {
       var el = createEl('a', { href: testURL })
 
       el.addEventListener('click', function (e) { e.preventDefault() })
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -186,21 +204,23 @@ describe('Adapter/Browser', function () {
       clickEl(el)
     })
 
-    it('should ignore links without an href', function (done) {
-      var el = createEl('a', {})
+    if (!history.emulate) {
+      it('should ignore links without an href', function (done) {
+        var el = createEl('a')
 
-      onClick(el, function (e) {
-        assert.ok(!e.defaultPrevented)
-        done()
+        once('click', el, function (e) {
+          assert.ok(!e.defaultPrevented)
+          done()
+        })
+
+        clickEl(el)
       })
-
-      clickEl(el)
-    })
+    }
 
     it('should ignore rel external links', function (done) {
       var el = createEl('a', { href: '/', rel: 'external' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -212,7 +232,7 @@ describe('Adapter/Browser', function () {
     it('should ignore target links', function (done) {
       var el = createEl('a', { href: '/', target: '_blank' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -222,9 +242,9 @@ describe('Adapter/Browser', function () {
     })
 
     it('should ignore different protocol links', function (done) {
-      var el = createEl('a', { href: 'https://' + location.host + '/test' })
+      var el = createEl('a', { href: diffProtocol + '://' + location.host + '/test' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -236,7 +256,7 @@ describe('Adapter/Browser', function () {
     it('should ignore links with a different host', function (done) {
       var el = createEl('a', { href: 'http://google.ca' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -248,7 +268,7 @@ describe('Adapter/Browser', function () {
     it('should ignore links with a download attribute', function (done) {
       var el = createEl('a', { href: '/test', download: 'test.file' })
 
-      onClick(el, function (e) {
+      once('click', el, function (e) {
         assert.ok(!e.defaultPrevented)
         el.parentNode.removeChild(el)
         done()
@@ -268,7 +288,7 @@ describe('Adapter/Browser', function () {
         formData = req.body
         formURL = req.url
         res.end()
-      })).listen(done)
+      }), false).listen(done)
     })
     afterEach(function (done) {
       formData = formURL = undefined
@@ -283,30 +303,34 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        assert.ok(formData.test)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.ok(formData.test)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
     })
 
     it('should handle internal GET forms with querystring', function (done) {
-      var testURL = '/test-interlal-get-form'
+      var testURL = '/test-internal-get-form'
       var el = createEl('form', { action: testURL, method: 'GET' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        var query = URL.parse(formURL, true).query
-        assert.equal(query.test, 1)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          var query = URL.parse(formURL, true).query
+          assert.equal(query.test, 1)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -321,11 +345,13 @@ describe('Adapter/Browser', function () {
       el.appendChild(submit)
 
       el.addEventListener('submit', function (e) { e.preventDefault() })
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -339,45 +365,51 @@ describe('Adapter/Browser', function () {
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
     })
 
     it('should ignore different protocol forms', function (done) {
-      var el = createEl('form', { action: 'https://' + location.host + '/test', method: 'POST' })
+      var el = createEl('form', { action: diffProtocol + '://' + location.host + '/test', method: 'POST' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
     })
 
-    it('should ignore links with a different host', function (done) {
+    it('should ignore forms with a different host', function (done) {
       var el = createEl('form', { action: 'http://google.ca', method: 'POST' })
       var input = createEl('input', { name: 'test', value: '1' })
       var submit = createEl('button', { type: 'submit' })
       el.appendChild(input)
       el.appendChild(submit)
 
-      onSubmit(el, function (e) {
+      once('submit', el, function (e) {
         assert.ok(!e.defaultPrevented)
-        assert.equal(formData, undefined)
-        el.parentNode.removeChild(el)
-        done()
+        setTimeout(function () {
+          assert.equal(formData, undefined)
+          el.parentNode.removeChild(el)
+          done()
+        }, 16)
       })
 
       clickEl(submit)
@@ -385,12 +417,23 @@ describe('Adapter/Browser', function () {
   })
 
   describe('#fetch', function () {
+    it('should fail with invalid options', function (done) {
+      var server = new http.Server()
+      fetch(server, 1)['catch'](function (err) {
+        assert.equal(err.name, 'TypeError')
+        fetch(server, {})['catch'](function (err) {
+          assert.equal(err.name, 'TypeError')
+          done()
+        })
+      })
+    })
+
     it('should emit a new request', function (done) {
       var called = 0
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        fetch(server, '/test')
+        fetch(server, { url: '/test', history: false })
       })
 
       function checkCompleted (req, res) {
@@ -402,11 +445,31 @@ describe('Adapter/Browser', function () {
       }
     })
 
+    it('should pass through body option', function (done) {
+      var startup = true
+      var server = new http.Server(checkCompleted)
+      server.once('request', checkCompleted)
+      server.listen(function () {
+        fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
+      })
+
+      function checkCompleted (req, res) {
+        if (startup) {
+          startup = false
+          return
+        }
+
+        assert.deepEqual(req.body, { a: 1 }, 'should have passed through body')
+        done()
+      }
+    })
+
     it('should be able to redirect and follow redirect', function (done) {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, '/test').then(function (res) {
+        fetch(server, { url: '/test' }).then(function (data) {
+          var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/redirected')
           server.close(done)
@@ -430,7 +493,8 @@ describe('Adapter/Browser', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, '/test', { redirect: 'manual' }).then(function (res) {
+        fetch(server, { url: '/test', redirect: 'manual' }).then(function (data) {
+          var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/test')
           server.close(done)
@@ -454,11 +518,10 @@ describe('Adapter/Browser', function () {
       server.listen(function () {
         fetch(server, new Request('/test', {
           method: 'POST',
-          referrer: 'http://google.ca',
-          headers: new Headers({
+          headers: {
             a: 1,
             b: 2
-          })
+          }
         }))
       })
 
@@ -495,25 +558,18 @@ function clickEl (el) {
 }
 
 /**
- * Listen for click events using event delegation to ensure run after hijacker.
+ * Adds an event listener for on event and ensures the default is prevented.
  */
-function onClick (el, fn) {
-  window.addEventListener('click', function (e) {
-    if (e.target === el) {
+function once (type, el, fn) {
+  window.addEventListener(type, function prevent (e) {
+    if (e.target !== el) return
+    window.removeEventListener(type, prevent)
+    try {
       fn(e)
+    } catch (err) {
+      throw err
+    } finally {
       if (!e.defaultPrevented) e.preventDefault()
     }
-  })
-}
-
-/**
- * Listen for submit events using event delegation to ensure run after hijacker.
- */
-function onSubmit (el, fn) {
-  window.addEventListener('submit', function (e) {
-    if (e.target === el) {
-      fn(e)
-      if (!e.defaultPrevented) e.preventDefault()
-    }
-  })
+  }, false)
 }
