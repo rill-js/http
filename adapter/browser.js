@@ -138,8 +138,8 @@ function onFinish (req, res) {
 
   // Don't push the same url twice.
   /* istanbul ignore next */
-  if (req.headers.referer === req.url) return
-  else server._referrer = req.url
+  if (req.headers.referer === parsed.href) return
+  else server._referrer = parsed.href
 
   // Update the href in the browser.
   /* istanbul ignore next */

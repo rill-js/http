@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.1 - 2017-03-14
+### Changed
+- Fixed regression with referrer not being the full href.
+
 ## 4.1.0 - 2017-03-11
 ### Changed
 - Switched to custom url/querystring parser and serializer. Optimized file size.
