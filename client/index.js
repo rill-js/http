@@ -4,26 +4,36 @@ var Server = require('./server')
 var IncomingMessage = require('./incoming-message')
 var ServerResponse = require('./server-response')
 var STATUS_CODES = require('statuses/codes.json')
-var METHODS = [
-  'DELETE',
-  'GET',
-  'HEAD',
+
+/** @type {object} */
+exports.STATUS_CODES = STATUS_CODES
+
+/** @type {string[]} */
+exports.METHODS = [
   'OPTIONS',
-  'PATCH',
+  'HEAD',
+  'GET',
+  'PUT',
   'POST',
-  'PUT'
+  'PATCH',
+  'DELETE'
 ]
 
-require('../adapter/browser')
+/** @type {Server} */
+exports.Server = Server
 
-module.exports = {
-  STATUS_CODES: STATUS_CODES,
-  METHODS: METHODS,
-  Server: Server,
-  IncomingMessage: IncomingMessage,
-  ServerResponse: ServerResponse,
-  createServer: function createServer () {
-    var cb = arguments[arguments.length - 1]
-    return new Server(cb)
-  }
+/** @type {IncomingMessage} */
+exports.IncomingMessage = IncomingMessage
+
+/** @type {ServerResponse} */
+exports.ServerResponse = ServerResponse
+
+/**
+ * Creates a new mock http server in the browser.
+ *
+ * @return {Server}
+ */
+exports.createServer = function () {
+  var onRequest = arguments[arguments.length - 1]
+  return new Server(onRequest)
 }

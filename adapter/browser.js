@@ -11,13 +11,15 @@ var history = window.history
 var document = window.document
 
 // Expose browser hijacker.
-module.exports = attachBrowser
-module.exports.fetch = fetch
+attachBrowser.fetch = fetch
+module.exports = attachBrowser['default'] = attachBrowser
 
 /**
  * Emulates node js http server in the browser by hijacking links and forms.
  *
- * @param {Server} server - the @rill/http server
+ * @param {Server} server - The @rill/http server to attach to.
+ * @param {boolean} [initialize=true] - If there should be an initial request.
+ * @return {Server}
  */
 function attachBrowser (server, initialize) {
   server._referrer = document && document.referrer
@@ -35,7 +37,9 @@ function attachBrowser (server, initialize) {
 }
 
 /**
- * Handle server listening
+ * Add event listeners to the browser once the server has started listening.
+ *
+ * @return {void}
  */
 function onListening () {
   window.addEventListener('popstate', this._onHistory)
@@ -47,7 +51,9 @@ function onListening () {
 }
 
 /**
- * Handle server closing
+ * Removes any attached event listeners once a server closes.
+ *
+ * @return {void}
  */
 function onClosing () {
   window.removeEventListener('popstate', this._onHistory)
@@ -59,7 +65,11 @@ function onClosing () {
 }
 
 /**
- * Handle incomming requests and add a litener for when it is complete.
+ * Handle incomming requests and add a listener for when it is complete.
+ *
+ * @param {IncomingMessage} req - The mock server request.
+ * @param {ServerResponse} res - The mock server response.
+ * @return {void}
  */
 function onRequest (req, res) {
   // Set referrer automatically.
@@ -69,7 +79,11 @@ function onRequest (req, res) {
 }
 
 /**
- * Handle completed requests.
+ * Handle completed requests by updating location, scroll, cookies, etc.
+ *
+ * @param {IncomingMessage} req - The mock server request.
+ * @param {ServerResponse} res - The mock server response.
+ * @return {void}
  */
 function onFinish (req, res) {
   var parsed = req._options.parsed
@@ -148,17 +162,20 @@ function onFinish (req, res) {
   }
 }
 
-/*
- * Handle an a history state change (back or startup) event.
+/**
+ * Handles history state changes (back or startup) and pushes them through the server.
+ *
+ * @return {void}
  */
 function onHistory () {
   fetch(this, { url: location.href, scroll: false, history: false })
 }
 
-/*
- * Handle intercepting forms to update the url.
+/**
+ * Handles intercepting forms and pushes them through the server.
  *
- * @param {Object} e
+ * @param {object} e - The <form> submit event.
+ * @return {void}
  */
 function onSubmit (e) {
   // Ignore canceled events.
@@ -191,10 +208,11 @@ function onSubmit (e) {
   if (!el.hasAttribute('data-noreset')) el.reset()
 }
 
-/*
- * Handle intercepting link clicks to update the url.
+/**
+ * Handle intercepting link clicks and pushes them through the server.
  *
- * @param {Object} e
+ * @param {object} e - The <a> click event.
+ * @return {void}
  */
 function onClick (e) {
   // Ignore canceled events, modified clicks, and right clicks.
@@ -231,13 +249,17 @@ function onClick (e) {
   fetch(this, { url: el.href })
 }
 
-/*
- * Trigger a request to the provided server.
+/**
+ * Like native window.fetch but requests from a local mock server.
  *
- * @param {Server} server
- * @param {String} url
- * @param {Object} opts
- * @param {Boolean} opts.scroll
+ * @param {Server} server - The local server to fetch from.
+ * @param {object} opts - Options about the request.
+ * @param {boolean} opts.url - The url to navigate to.
+ * @param {object} [opts.body] - An request body to pass through as is.
+ * @param {HTMLElement} [opts.form] - A form to parse and pass through as the request body.
+ * @param {boolean} [opts.scroll] - Should the request trigger a page scroll.
+ * @param {boolean} [opts.history] - Should the request update the page url.
+ * @param {string|false} [opts.redirect='follow'] - Should we follow any redirects.
  * @api private
  */
 function fetch (server, options) {

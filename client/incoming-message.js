@@ -1,29 +1,54 @@
 'use strict'
 
 var EventEmitter = require('events-light')
-var proto = IncomingMessage.prototype = Object.create(EventEmitter.prototype)
 
+// Expose module.
 IncomingMessage._createIncomingMessage = createIncomingMessage
-module.exports = IncomingMessage
+module.exports = IncomingMessage['default'] = IncomingMessage
 
 /**
  * Emulates nodes IncomingMessage in the browser.
  * See: https://nodejs.org/api/http.html#http_class_http_incomingmessage
+ *
+ * @param {net.Socket} socket - An emulated node socket.
+ * @constructor
  */
 function IncomingMessage (socket) {
   this.headers = {}
   this.socket = this.connection = socket
 }
 
-// Defaults
-proto.httpVersionMajor = 1
-proto.httpVersionMinor = 1
-proto.httpVersion = proto.httpVersionMajor + '.' + proto.httpVersionMinor
-proto.complete = false
-proto.url = ''
+// Extend EventEmitter.
+IncomingMessage.prototype = Object.create(EventEmitter.prototype)
+
+// Static properties and type definitions.
+/** @type {number} */
+IncomingMessage.prototype.httpVersionMajor = 1
+
+/** @type {number} */
+IncomingMessage.prototype.httpVersionMinor = 1
+
+/** @type {string} */
+IncomingMessage.prototype.httpVersion = IncomingMessage.prototype.httpVersionMajor + '.' + IncomingMessage.prototype.httpVersionMinor
+
+/** @type {boolean} */
+IncomingMessage.prototype.complete = false
+
+/** @type {string} */
+IncomingMessage.prototype.url = ''
+
+/** @type {object} */
+IncomingMessage.prototype.headers = {}
+
+/** @type {string} */
+IncomingMessage.prototype.method = 'GET'
 
 /**
  * Creates a new incoming request and sets up some headers and other properties.
+ *
+ * @param {http.Server} server - The http server to create a request for.
+ * @param {object} options - Options for the request.
+ * @return {IncomingMessage}
  */
 function createIncomingMessage (server, options) {
   var parsed = options.parsed
@@ -46,10 +71,8 @@ function createIncomingMessage (server, options) {
   headers['accept'] = '*/*'
 
   // Attach headers from request
-  var reqHeaders = toHeaders(options.headers)
-  for (var header in reqHeaders) {
-    headers[header] = reqHeaders[header]
-  }
+  var reqHeaders = normalizeHeaders(options.headers)
+  for (var header in reqHeaders) headers[header] = reqHeaders[header]
 
   // Setup other properties.
   incommingMessage.method = options.method ? options.method.toUpperCase() : 'GET'
@@ -60,8 +83,11 @@ function createIncomingMessage (server, options) {
 
 /**
  * Converts a headers object to a regular object.
+ *
+ * @param {object} headers - The headers to normalize.
+ * @return {object}
  */
-function toHeaders (headers) {
+function normalizeHeaders (headers) {
   if (headers == null || typeof headers.forEach !== 'function') return headers
   var result = {}
   headers.forEach(function (value, header) { result[header] = value })

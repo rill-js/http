@@ -1,24 +1,34 @@
 'use strict'
 
 var EventEmitter = require('events-light')
-var server = Server.prototype = Object.create(EventEmitter.prototype)
+
+// Expose module.
+module.exports = Server['default'] = Server
 
 /**
  * Emulates node js http server in the browser.
  *
- * @param {Function} handler - the handle for a request.
+ * @param {Function} [onRequest] - A function that will be called on every request.
  */
-function Server (handler) {
-  if (handler) this.on('request', handler)
+function Server (onRequest) {
+  if (onRequest) this.on('request', onRequest)
 }
 
+// Extend EventEmitter.
+Server.prototype = Object.create(EventEmitter.prototype)
+
 /**
- * Listen to all url change events on a dom element and trigger the server callback.
+ * Starts a server and sets listening to true.
+ * Adapters will hook into this to startup routers on individual platforms.
+ *
+ * @param {...any}
+ * @param {Function} [onListening] - A function that will be called once the server is listening.
+ * @return {this}
  */
-server.listen = function listen () {
+Server.prototype.listen = function listen () {
   // Automatically add callback `listen` handler.
-  var cb = arguments[arguments.length - 1]
-  if (typeof cb === 'function') this.once('listening', cb)
+  var onListening = arguments[arguments.length - 1]
+  if (typeof onListening === 'function') this.once('listening', onListening)
 
   // Ensure that listening is `async`.
   setTimeout(function () {
@@ -32,11 +42,13 @@ server.listen = function listen () {
 
 /**
  * Closes the server and destroys all event listeners.
+ *
+ * @param {Function} [onClose] - A function that will be called once the server has closed.
+ * @return {this}
  */
-server.close = function close () {
+Server.prototype.close = function close (onClose) {
   // Automatically add callback `close` handler.
-  var cb = arguments[arguments.length - 1]
-  if (typeof cb === 'function') this.once('close', cb)
+  if (typeof onClose === 'function') this.once('close', onClose)
 
   // Ensure that closing is `async`.
   setTimeout(function () {
@@ -47,5 +59,3 @@ server.close = function close () {
 
   return this
 }
-
-module.exports = Server

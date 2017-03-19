@@ -13,10 +13,10 @@ var location = (window.history && window.history.location) || window.location ||
  */
 function createIncomingMessage (opts) {
   opts.parsed = URL.parse(opts.url, location.href)
-  var incommingMessage = new http.IncomingMessage._createIncomingMessage({}, opts)
-  incommingMessage.url = opts.url
-  incommingMessage.body = opts && opts.body
-  return incommingMessage
+  var incomingMessage = new http.IncomingMessage._createIncomingMessage({}, opts)
+  incomingMessage.url = opts.url
+  incomingMessage.body = opts && opts.body
+  return incomingMessage
 }
 
 describe('Request', function () {
