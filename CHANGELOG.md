@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 4.1.3 - 2017-03-23
+### Changed
+- Fix regression with parsing querystrings on GET forms.
+
 ## 4.1.2 - 2017-03-18
 ### Changed
 - Improved inline JSDocs.

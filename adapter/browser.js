@@ -271,7 +271,6 @@ function fetch (server, options) {
     // Create a nodejs style req and res.
     var incommingMessage = IncomingMessage._createIncomingMessage(server, options)
     var serverResponse = ServerResponse._createServerResponse(incommingMessage)
-    var search = parsed.search
 
     // Forward some special options.
     if (options.body) {
@@ -285,7 +284,10 @@ function fetch (server, options) {
       incommingMessage.headers['content-type'] = el.enctype || el.getAttribute('enctype') || 'application/x-www-form-urlencoded'
       if (incommingMessage.method === 'GET') {
         // If we have a form on a get request we replace the search.
-        search = '?' + QS.stringify(data.body, true)
+        parsed = options.parsed = URL.parse(
+          parsed.pathname + '?' + QS.stringify(data.body, true) + parsed.hash,
+          location.href
+        )
       } else {
         // Otherwise we pass it through.
         incommingMessage.body = data.body
@@ -298,7 +300,7 @@ function fetch (server, options) {
     incommingMessage._history = options.history
 
     // Set the request url.
-    incommingMessage.url = parsed.pathname + search + parsed.hash
+    incommingMessage.url = parsed.pathname + parsed.search + parsed.hash
 
     // Wait for server response to be sent.
     serverResponse.once('finish', function handleResponseEnd () {
