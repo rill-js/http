@@ -246,7 +246,7 @@ function onClick (e) {
 
   // Attempt to navigate internally.
   e.preventDefault()
-  fetch(this, { url: el.href })
+  fetch(this, el.href)
 }
 
 /**
@@ -262,10 +262,21 @@ function onClick (e) {
  * @param {string|false} [opts.redirect='follow'] - Should we follow any redirects.
  * @api private
  */
-function fetch (server, options) {
-  if (typeof options !== 'object' || options == null) return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options must be an object.'))
-  if (typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: options.url must be a string.'))
+function fetch (server, url, options) {
+  // Allow for both url string or { url: '...' } object.
+  if (typeof url === 'object') {
+    options = url
+  } else if (typeof url === 'string') {
+    options = options || {}
+    options.url = url
+  }
+
+  // Ensure url was a string.
+  if (!options || typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: url must be a string.'))
+
+  // Parse url parts into an object.
   var parsed = options.parsed = URL.parse(options.url, location.href)
+
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
     // Create a nodejs style req and res.

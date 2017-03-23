@@ -42,7 +42,7 @@ describe('Adapter/Browser', function () {
         res.end()
       })
 
-      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
+      return fetch(server, '/test', { method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1', 'should have set cookie')
       })
     })
@@ -52,7 +52,7 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
-      return fetch(server, { url: '/test', method: 'POST', history: false }).then(function () {
+      return fetch(server, '/test', { method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
     })
@@ -81,7 +81,7 @@ describe('Adapter/Browser', function () {
       this.timeout(3000)
       var start
       server.once('request', handleNavigate)
-      fetch(server, { url: '/test', history: false })
+      fetch(server, '/test', { history: false })
 
       function handleNavigate (req, res) {
         start = new Date()
@@ -433,7 +433,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        fetch(server, { url: '/test', history: false })
+        fetch(server, '/test', { history: false })
       })
 
       function checkCompleted (req, res) {
@@ -450,7 +450,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server(checkCompleted)
       server.once('request', checkCompleted)
       server.listen(function () {
-        fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
+        fetch(server, '/test', { method: 'POST', body: { a: 1 } })
       })
 
       function checkCompleted (req, res) {
@@ -468,7 +468,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, { url: '/test' }).then(function (data) {
+        fetch(server, '/test').then(function (data) {
           var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/redirected')
@@ -493,7 +493,7 @@ describe('Adapter/Browser', function () {
       var server = new http.Server()
       server.once('request', handleNavigate)
       server.listen(function () {
-        fetch(server, { url: '/test', redirect: 'manual' }).then(function (data) {
+        fetch(server, '/test', { redirect: 'manual' }).then(function (data) {
           var res = data[1]
           assert(res.status, 200)
           assert(res.url, '/test')
