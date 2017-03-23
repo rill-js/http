@@ -87,7 +87,7 @@ var server = browserAdapter(http.createServer())
 var fetch = browserAdapter.fetch
 
 // Also note that the full response api does not exist in browsers lacking fetch (use a polyfill).
-fetch(server, { url: '/test', method: 'POST' })
+fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
   .then(([body, res]) => {
     // body will be a blob of data created from the response.
     // res contains response meta data (status, statusText, headers and url).
@@ -97,6 +97,11 @@ fetch(server, { url: '/test', method: 'POST' })
   })
   .then((res) => res.json())
   .then(console.log.bind(console))
+
+// The fetch api also supports the ability to parse an html form.
+// The form will be parsed into the requets body (or query string on GET requests).
+var myForm = document.getElementById('myForm')
+fetch(server, { url: '/test', method: 'POST', form: myForm })
 ```
 
 ### Contributions

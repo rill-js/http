@@ -269,44 +269,54 @@ function fetch (server, options) {
   // Return a 'fetch' style response as a promise.
   return new Promise(function (resolve, reject) {
     // Create a nodejs style req and res.
-    var incommingMessage = IncomingMessage._createIncomingMessage(server, options)
-    var serverResponse = ServerResponse._createServerResponse(incommingMessage)
+    var incomingMessage = IncomingMessage._createIncomingMessage(server, options)
+    var serverResponse = ServerResponse._createServerResponse(incomingMessage)
+    var form = options.form
 
-    // Forward some special options.
-    if (options.body) {
-      // Allow passing body through directly.
-      incommingMessage.body = options.body
-    } else if (options.form) {
-      // Or provide a form to parse.
-      var el = options.form
-      var data = parseForm(el)
-      /* istanbul ignore next */
-      incommingMessage.headers['content-type'] = el.enctype || el.getAttribute('enctype') || 'application/x-www-form-urlencoded'
-      if (incommingMessage.method === 'GET') {
-        // If we have a form on a get request we replace the search.
+    // Handle special form option.
+    if (form) {
+      // Copy content type from form.
+      incomingMessage.headers['content-type'] = (
+        form.enctype ||
+        /* istanbul ignore next */
+        form.getAttribute('enctype') ||
+        /* istanbul ignore next */
+        'application/x-www-form-urlencoded'
+      )
+
+      // Parse form data and override options.
+      var formData = parseForm(form)
+      options.body = formData.body
+      options.files = formData.files
+    }
+
+    if (incomingMessage.method === 'GET') {
+      // On get requests with bodies we update the query string.
+      var query = options.query || options.body
+      if (query) {
         parsed = options.parsed = URL.parse(
-          parsed.pathname + '?' + QS.stringify(data.body, true) + parsed.hash,
+          parsed.pathname + '?' + QS.stringify(query, true) + parsed.hash,
           location.href
         )
-      } else {
-        // Otherwise we pass it through.
-        incommingMessage.body = data.body
-        incommingMessage.files = data.files
       }
+    } else {
+      // Otherwise we pass through body data as is.
+      incomingMessage.body = options.body
+      incomingMessage.files = options.files
     }
 
     // Set some hidden browser specific options.
-    incommingMessage._scroll = options.scroll
-    incommingMessage._history = options.history
+    incomingMessage._scroll = options.scroll
+    incomingMessage._history = options.history
 
     // Set the request url.
-    incommingMessage.url = parsed.pathname + parsed.search + parsed.hash
+    incomingMessage.url = parsed.pathname + parsed.search + parsed.hash
 
     // Wait for server response to be sent.
     serverResponse.once('finish', function handleResponseEnd () {
       // Marks incomming message as complete.
-      incommingMessage.complete = true
-      incommingMessage.emit('end')
+      incomingMessage.complete = true
+      incomingMessage.emit('end')
 
       // Check to see if we should redirect.
       var redirect = serverResponse.getHeader('location')
@@ -320,7 +330,7 @@ function fetch (server, options) {
       // Send out final response data and meta data.
       // This format allows for new Response(...data) when paired with the fetch api.
       return resolve([serverResponse._body, {
-        url: incommingMessage.url,
+        url: incomingMessage.url,
         headers: serverResponse.getHeaders(),
         status: serverResponse.statusCode,
         statusText: serverResponse.statusMessage
@@ -328,6 +338,6 @@ function fetch (server, options) {
     })
 
     // Trigger request event on server.
-    server.emit('request', incommingMessage, serverResponse)
+    server.emit('request', incomingMessage, serverResponse)
   })
 }
