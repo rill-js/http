@@ -348,7 +348,7 @@ function fetch (server, url, options) {
       }])
     })
 
-    // Trigger request event on server.
-    server.emit('request', incomingMessage, serverResponse)
+    // Trigger request event on server (ensured async).
+    setTimeout(server.emit.bind(server, 'request', incomingMessage, serverResponse), 0)
   })
 }
