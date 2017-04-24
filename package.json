@@ -8,7 +8,7 @@
   "dependencies": {
     "events-light": "^1.0.5",
     "get-loc": "^1.0.0",
-    "global": "^4.3.1",
+    "global": "^4.3.2",
     "mini-querystring": "^1.0.2",
     "mini-url": "^1.6.1",
     "parse-form": "^3.2.0",
@@ -16,7 +16,7 @@
   },
   "devDependencies": {
     "browserify": "^13.3.0",
-    "coveralls": "^2.12.0",
+    "coveralls": "^2.13.0",
     "easy-sauce": "^0.4.1",
     "es6-promise": "^4.1.0",
     "html5-history-api": "^4.2.8",
@@ -25,9 +25,9 @@
     "jsdom": "^9.12.0",
     "jsdom-global": "^2.1.1",
     "mocha": "^3.2.0",
-    "snazzy": "^6.0.0",
+    "snazzy": "^7.0.0",
     "source-map-support": "^0.4.14",
-    "standard": "^9.0.2"
+    "standard": "^10.0.2"
   },
   "homepage": "https://github.com/rill-js/http",
   "files": [
