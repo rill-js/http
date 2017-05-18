@@ -10,9 +10,9 @@ var ServerResponse = require('../client/server-response')
 var history = window.history
 var document = window.document
 
-// Expose browser hijacker.
-attachBrowser.fetch = fetch
-module.exports = attachBrowser['default'] = attachBrowser
+// Expose adapter.
+exports.fetch = fetch
+exports.attach = attach
 
 /**
  * Emulates node js http server in the browser by hijacking links and forms.
@@ -21,7 +21,7 @@ module.exports = attachBrowser['default'] = attachBrowser
  * @param {boolean} [initialize=true] - If there should be an initial request.
  * @return {Server}
  */
-function attachBrowser (server, initialize) {
+function attach (server, initialize) {
   server._referrer = document && document.referrer
   server._initialize = initialize !== false
   server._pending_refresh = null

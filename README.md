@@ -39,7 +39,9 @@
   </a>
 </h1>
 
-Bring a nodejs style server into the client by listening to link clicks and form submissions. Works in modern browsers.
+Bring a nodejs style server into the browser. This allows for universal routing (shared between client and server).
+
+This module supports many environments including Servive Workers, Web Workers, and a standard webpage. A [document adapter](#document-adapter) also exists which allows for automatic link and form hijacking for handling requests within the browser.
 
 # Why
 People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
@@ -49,23 +51,23 @@ All modern browsers are supported including IE10+. IE9 is also supported with a 
 
 Older browsers will also need to polyfill the Promise API, checkout [es6-promise](https://github.com/stefanpenner/es6-promise) for a good polyfill, babel-polyfill also covers this.
 
-# Installation
+## Installation
 
 ```console
 npm install @rill/http
 ```
 
-# Example
+## Example
 
 ```javascript
-// Note that the following code runs in pretty much any environment.
+// Note that the following code runs in pretty much any environment (with optional babel transpilation).
 
-var http = require('@rill/http')
+import http from '@rill/http'
 
-var server = http.createServer((req, res)=> {
-	console.log(req.method, req.url)
-	res.end()
-});
+const server = http.createServer((req, res)=> {
+  console.log(req.method, req.url)
+  res.end()
+})
 
 /**
  * Listening in the browser will intelligently intercept link clicks and form
@@ -74,19 +76,23 @@ var server = http.createServer((req, res)=> {
 server.listen()
 ```
 
-# Browser Adapter
-By default @rill/http no longer will intercept link clicks and form submissions (although Rill still will). Instead you can adapt an existing @rill/http server to hijack the browser as well as add browser specific features such as cookies.
+## Document Adapter
+This adapter provides adds the following features to an existing @rill/http server:
+
+* Intercepts links and forms and forwards them through the http server.
+* Supports the html5 history api, enabling the back button to also be handled by the server.
+* Adds useful meta data to each request (cookies, headers, etc).
+* Handles response headers such as 'set-cookie', 'refresh' and 'location'.
 
 In the future there may be more adapters for different environments such as mobile.
 
 ```javascript
-var browserAdapter = require('@rill/http/adapter/browser')
-var server = browserAdapter(http.createServer())
+import { attach, fetch } from '@rill/http/adapter/document'
+
+// Apply document adapter to an existing server.
+attach(server)
 
 // Adapters also provide a 'fetch' api similar to the native fetch api to request things from a server.
-var fetch = browserAdapter.fetch
-
-// Also note that the full response api does not exist in browsers lacking fetch (use a polyfill).
 fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
   .then(([body, res]) => {
     // body will be a blob of data created from the response.
@@ -95,12 +101,12 @@ fetch(server, { url: '/test', method: 'POST', body: { a: 1 } })
     const blob = new Blob(body, { type: res.headers['content-type'] })
     return new Response(blob, res)
   })
-  .then((res) => res.json())
-  .then(console.log.bind(console))
+  .then(res => res.json())
+  .then(console.log)
 
-// The fetch api also supports the ability to parse an html form.
+// The document adapter fetch api also supports the ability to parse an html form.
 // The form will be parsed into the requets body (or query string on GET requests).
-var myForm = document.getElementById('myForm')
+const myForm = document.getElementById('myForm')
 fetch(server, { url: '/test', method: 'POST', form: myForm })
 ```
 

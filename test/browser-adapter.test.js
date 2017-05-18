@@ -6,7 +6,7 @@ var window = require('global')
 var assert = require('assert')
 var location = require('get-loc')()
 var http = require('../client')
-var adapter = require('../adapter/browser')
+var adapter = require('../adapter/document')
 var fetch = adapter.fetch
 var Request = global.Request
 var history = window.history
@@ -20,7 +20,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('cookies', function () {
-    var server = adapter(http.createServer(), false)
+    var server = adapter.attach(http.createServer(), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -59,7 +59,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('initialize', function () {
-    var server = adapter(http.createServer())
+    var server = adapter.attach(http.createServer())
     before(function () { server.listen() })
     after(function (done) { server.close(done) })
 
@@ -73,7 +73,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('refresh', function () {
-    var server = adapter(http.createServer(), false)
+    var server = adapter.attach(http.createServer(), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -102,7 +102,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('back', function () {
-    var server = adapter(http.createServer(), false)
+    var server = adapter.attach(http.createServer(), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -118,7 +118,7 @@ describe('Adapter/Browser', function () {
   })
 
   describe('<a> click', function () {
-    var server = adapter(http.createServer(function (req, res) { res.end() }), false)
+    var server = adapter.attach(http.createServer(function (req, res) { res.end() }), false)
     before(function (done) { server.listen(done) })
     after(function (done) { server.close(done) })
 
@@ -284,7 +284,7 @@ describe('Adapter/Browser', function () {
     var server
 
     beforeEach(function (done) {
-      server = adapter(http.createServer(function (req, res) {
+      server = adapter.attach(http.createServer(function (req, res) {
         formData = req.body
         formURL = req.url
         res.end()
