@@ -41,10 +41,10 @@
 
 Bring a nodejs style server into the browser. This allows for universal routing (shared between client and server).
 
-This module supports many environments including Servive Workers, Web Workers, and a standard webpage. A [document adapter](#document-adapter) also exists which allows for automatic link and form hijacking for handling requests within the browser.
+This module supports many environments including Service Workers, Web Workers, and a standard webpage. A [document adapter](#document-adapter) also exists which allows for link and form interception for handling requests automatically within the browser.
 
 # Why
-People love node, people love the programming style and it's flexibility. This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
+This api exposes the "http" module as an isomorphic server. It essentially allows you to run your nodejs server in the browser for epic progressive enhancement and an isomorphic paradise. This is a low level library used by [Rill](https://github.com/rill-js/rill) which implements an express style api on top of this.
 
 # Browser support
 All modern browsers are supported including IE10+. IE9 is also supported with a [History API polyfill](https://github.com/devote/HTML5-History-API).
