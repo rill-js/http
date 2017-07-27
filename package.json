@@ -1,7 +1,7 @@
 {
   "name": "@rill/http",
   "description": "Universal http module with createServer support.",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "browser": "./client/index.js",
   "bugs": "https://github.com/rill-js/http/issues",
