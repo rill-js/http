@@ -1,14 +1,18 @@
+// @ts-check
+/** Type Definitions */
+/** @module rill/http/Server */
+/** @typedef {(req: http.IncomingMessage, res: http.ServerResponse?) => any} RequestHandler */
 'use strict'
 
 var EventEmitter = require('events-light')
-
-// Expose module.
 module.exports = Server['default'] = Server
 
 /**
  * Emulates node js http server in the browser.
  *
- * @param {Function} [onRequest] - A function that will be called on every request.
+ * @param {RequestHandler} onRequest - A function called on each request.
+ * @constructor
+ * @extends EventEmitter
  */
 function Server (onRequest) {
   if (onRequest) this.on('request', onRequest)
@@ -21,9 +25,9 @@ Server.prototype = Object.create(EventEmitter.prototype)
  * Starts a server and sets listening to true.
  * Adapters will hook into this to startup routers on individual platforms.
  *
- * @param {...any}
+ * @param {...any} [args] - Arguments beside the onListening function are ignored in the browser.
  * @param {Function} [onListening] - A function that will be called once the server is listening.
- * @return {this}
+ * @return {Server}
  */
 Server.prototype.listen = function listen () {
   // Automatically add callback `listen` handler.
@@ -44,7 +48,7 @@ Server.prototype.listen = function listen () {
  * Closes the server and destroys all event listeners.
  *
  * @param {Function} [onClose] - A function that will be called once the server has closed.
- * @return {this}
+ * @return {Server}
  */
 Server.prototype.close = function close (onClose) {
   // Automatically add callback `close` handler.

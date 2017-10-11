@@ -52,6 +52,7 @@ describe('Adapter/Browser', function () {
         res.setHeader('set-cookie', ['x=1', 'y=2'])
         res.end()
       })
+
       return fetch(server, '/test', { method: 'POST', history: false }).then(function () {
         assert.equal(document.cookie, 'x=1; y=2', 'should have set cookie')
       })
@@ -285,7 +286,7 @@ describe('Adapter/Browser', function () {
 
     beforeEach(function (done) {
       server = adapter.attach(http.createServer(function (req, res) {
-        formData = req.body
+        formData = req._options.body
         formURL = req.url
         res.end()
       }), false).listen(done)
@@ -459,7 +460,7 @@ describe('Adapter/Browser', function () {
           return
         }
 
-        assert.deepEqual(req.body, { a: 1 }, 'should have passed through body')
+        assert.deepEqual(req._options.body, { a: 1 }, 'should have passed through body')
         done()
       }
     })

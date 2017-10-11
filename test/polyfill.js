@@ -5,6 +5,9 @@ require('es6-promise/auto')
 require('isomorphic-fetch')
 if (window === global) require('html5-history-api')
 
+// Ignore scrolling
+window.scrollTo = function () {}
+
 // Patch jsdom with the fetch api.
 if (!window.Headers) window.Headers = global.Headers
 if (!window.Request) window.Request = global.Request

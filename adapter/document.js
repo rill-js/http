@@ -1,5 +1,22 @@
+// @ts-check
+/** Type Definitions */
+/** @module rill/http/adapter/document */
+/**
+ * @typedef {object} FetchOptions
+ * @property {string} [url] - The url to fetch.
+ * @property {string} [method='GET'] - The http method to use.
+ * @property {HTMLFormElement} [form] - A form element to submit as the body.
+ * @property {object} [query] - A request query to add to the url.
+ * @property {object} [body] - A request body to pass through as is.
+ * @property {object} [files] - An object with files to add to the request body.
+ * @property {boolean} [scroll] - Should the request trigger a page scroll.
+ * @property {boolean} [history] - Should the request update the page url.
+ * @property {string|false} [redirect='follow'] - Should we follow any redirects.
+ * @property {object} [parsed] - A parsed URL for the request.
+ */
 'use strict'
 
+/** @type {object} */
 var window = require('global')
 var URL = require('mini-url')
 var parseForm = require('parse-form')
@@ -9,17 +26,15 @@ var IncomingMessage = require('../client/incoming-message')
 var ServerResponse = require('../client/server-response')
 var history = window.history
 var document = window.document
-
-// Expose adapter.
 exports.fetch = fetch
 exports.attach = attach
 
 /**
  * Emulates node js http server in the browser by hijacking links and forms.
  *
- * @param {Server} server - The @rill/http server to attach to.
+ * @param {http.Server} server - The @rill/http server to attach to.
  * @param {boolean} [initialize=true] - If there should be an initial request.
- * @return {Server}
+ * @return {http.Server}
  */
 function attach (server, initialize) {
   server._referrer = document && document.referrer
@@ -65,7 +80,7 @@ function onClosing () {
 }
 
 /**
- * Handle incomming requests and add a listener for when it is complete.
+ * Handle incoming requests and add a listener for when it is complete.
  *
  * @param {IncomingMessage} req - The mock server request.
  * @param {ServerResponse} res - The mock server response.
@@ -86,7 +101,8 @@ function onRequest (req, res) {
  * @return {void}
  */
 function onFinish (req, res) {
-  var parsed = req._options.parsed
+  var options = req._options
+  var parsed = options.parsed
   var server = req.socket.server
 
   // Any navigation during a 'refresh' will cancel the refresh.
@@ -109,7 +125,7 @@ function onFinish (req, res) {
   // Check to see if a refresh was requested.
   var refresh = res.getHeader('refresh')
   if (refresh) {
-    var parts = refresh.split(' url=')
+    var parts = String(refresh).split(' url=')
     var timeout = parseInt(parts[0], 10) * 1000
     var redirectURL = parts[1]
     // This handles refresh headers similar to browsers by waiting a timeout, then navigating.
@@ -132,7 +148,7 @@ function onFinish (req, res) {
    * This is similar to how browsers handle page transitions natively.
    */
   /* istanbul ignore next */
-  if (req._scroll !== false) {
+  if (options.scroll !== false) {
     if (parsed.hash === '') window.scrollTo(0, 0)
     else {
       var target = document.getElementById(parsed.hash.slice(1))
@@ -157,7 +173,7 @@ function onFinish (req, res) {
 
   // Update the href in the browser.
   /* istanbul ignore next */
-  if (req._history !== false) {
+  if (options.history !== false) {
     history.pushState(null, document.title, req.url)
   }
 }
@@ -174,7 +190,7 @@ function onHistory () {
 /**
  * Handles intercepting forms and pushes them through the server.
  *
- * @param {object} e - The <form> submit event.
+ * @param {Event} e - The <form> submit event.
  * @return {void}
  */
 function onSubmit (e) {
@@ -182,10 +198,12 @@ function onSubmit (e) {
   if (e.defaultPrevented) return
 
   // Get the <form> element.
+  /** @type {HTMLFormElement} */
   var el = e.target
   /* istanbul ignore next */
   var action = el.action || el.getAttribute('action') || ''
   // Parse out host and protocol.
+  /** @type {object} */
   var parsed = URL.parse(action, location.href)
 
   // Ignore the click if the element has a target.
@@ -211,7 +229,7 @@ function onSubmit (e) {
 /**
  * Handle intercepting link clicks and pushes them through the server.
  *
- * @param {object} e - The <a> click event.
+ * @param {MouseEvent} e - The <a> click event.
  * @return {void}
  */
 function onClick (e) {
@@ -225,6 +243,7 @@ function onClick (e) {
   ) return
 
   // Get the clicked element.
+  /** @type {HTMLAnchorElement} */
   var el = e.target
   // Find an <a> element that may have been clicked.
   while (el != null && el.nodeName !== 'A') el = el.parentNode
@@ -252,14 +271,14 @@ function onClick (e) {
 /**
  * Like native window.fetch but requests from a local mock server.
  *
- * @param {Server} server - The local server to fetch from.
- * @param {object} opts - Options about the request.
- * @param {boolean} opts.url - The url to navigate to.
- * @param {object} [opts.body] - An request body to pass through as is.
- * @param {HTMLElement} [opts.form] - A form to parse and pass through as the request body.
- * @param {boolean} [opts.scroll] - Should the request trigger a page scroll.
- * @param {boolean} [opts.history] - Should the request update the page url.
- * @param {string|false} [opts.redirect='follow'] - Should we follow any redirects.
+ * @param {http.Server} server - The local server to fetch from.
+ * @param {string|FetchOptions} url - The url to navigate to.
+ * @param {FetchOptions} [options] - Options about the request.
+ * @param {object} [options.body] - An request body to pass through as is.
+ * @param {HTMLElement} [options.form] - A form to parse and pass through as the request body.
+ * @param {boolean} [options.scroll] - Should the request trigger a page scroll.
+ * @param {boolean} [options.history] - Should the request update the page url.
+ * @param {string|false} [options.redirect='follow'] - Should we follow any redirects.
  * @api private
  */
 function fetch (server, url, options) {
@@ -272,9 +291,12 @@ function fetch (server, url, options) {
   }
 
   // Ensure url was a string.
-  if (!options || typeof options.url !== 'string') return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: url must be a string.'))
+  if (!options || typeof options.url !== 'string') {
+    return Promise.reject(new TypeError('@rill/http/adapter/browser#fetch: url must be a string.'))
+  }
 
   // Parse url parts into an object.
+  /** @type {object} */
   var parsed = options.parsed = URL.parse(options.url, location.href)
 
   // Return a 'fetch' style response as a promise.
@@ -310,15 +332,7 @@ function fetch (server, url, options) {
           location.href
         )
       }
-    } else {
-      // Otherwise we pass through body data as is.
-      incomingMessage.body = options.body
-      incomingMessage.files = options.files
     }
-
-    // Set some hidden browser specific options.
-    incomingMessage._scroll = options.scroll
-    incomingMessage._history = options.history
 
     // Set the request url.
     incomingMessage.url = parsed.pathname + parsed.search + parsed.hash
@@ -334,7 +348,11 @@ function fetch (server, url, options) {
       if (redirect) {
         // Follow redirect if needed.
         if (options.redirect === undefined || options.redirect === 'follow') {
-          return resolve(fetch(server, { url: redirect, history: options.history, scroll: options.scroll }))
+          return resolve(fetch(server, {
+            url: String(redirect),
+            history: options.history,
+            scroll: options.scroll
+          }))
         }
       }
 

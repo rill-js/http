@@ -1,42 +1,45 @@
+// @ts-check
+/** Type Definitions */
+/** @module rill/http/ServerResponse */
+/** @typedef {Buffer|ArrayBuffer|string[]} Chunk */
+/** @typedef {{ server: http.Server, remoteAddress: string, encrypted: boolean }} Socket */
+/** @typedef {{ referrer?: string, referer?: string?, date?: string, host?: string, cookie?: string, 'user-agent'?: string, 'accept-language'?: string, connection?: string, 'cache-control'?: string, accept?: string, [x]: string|string[] }} Headers */
 'use strict'
 
 var EventEmitter = require('events-light')
+// @ts-ignore
 var STATUS_CODES = require('statuses/codes.json')
-
-// Expose module.
-ServerResponse._createServerResponse = createServerResponse
 module.exports = ServerResponse['default'] = ServerResponse
 
 /**
  * Emulates nodes ServerResponse in the browser.
  * See: https://nodejs.org/api/http.html#http_class_http_serverresponse
  *
- * @param {IncomingMessage} incomingMessage - The request to the server.
+ * @param {http.IncomingMessage} incomingMessage - The request to the server.
  * @constructor
+ * @extends EventEmitter
  */
 function ServerResponse (incomingMessage) {
+  /** @type {Chunk[]} */
+  this._body = []
+  /** @type {Headers} */
   this._headers = {}
+  /** @type {Socket} */
   this.socket = this.connection = incomingMessage.socket
+  /** @type {number} */
+  this.statusCode = null
+  /** @type {string} */
+  this.statusMessage = null
+  /** @type {boolean} */
+  this.sendDate = true
+  /** @type {boolean} */
+  this.finished = false
+  /** @type {boolean} */
+  this.headersSent = false
 }
 
 // Extend EventEmitter.
 ServerResponse.prototype = Object.create(EventEmitter.prototype)
-
-// Static properties and type definitions.
-/** @type {number} */
-ServerResponse.prototype.statusCode = null
-
-/** @type {string} */
-ServerResponse.prototype.statusMessage = null
-
-/** @type {boolean} */
-ServerResponse.prototype.sendDate = true
-
-/** @type {boolean} */
-ServerResponse.prototype.finished = false
-
-/** @type {boolean} */
-ServerResponse.prototype.headersSent = false
 
 /** @type {Function} */
 ServerResponse.prototype.writeContinue =
@@ -50,7 +53,7 @@ ServerResponse.prototype.addTrailers = function () {}
 /**
  * Writes data to the current ServerResponse body.
  *
- * @param {Buffer|ArrayBuffer|string[]} chunk - The chunk of data to write.
+ * @param {Chunk} chunk - The chunk of data to write.
  * @param {string} [encoding] - The encoding for the chunk.
  * @param {Function} [onFinish] - A function that will be called when the response has finished.
  */
@@ -72,7 +75,7 @@ ServerResponse.prototype.write = function (chunk, encoding, onFinish) {
  *
  * @param {number} [statusCode] - The status code to write.
  * @param {string} [string] - The status message to write.
- * @param {object} [headers] - An object containing headers to write.
+ * @param {Headers} [headers] - An object containing headers to write.
  */
 ServerResponse.prototype.writeHead = function writeHead (statusCode, statusMessage, headers) {
   if (this.finished) return
@@ -97,7 +100,7 @@ ServerResponse.prototype.writeHead = function writeHead (statusCode, statusMessa
 /**
  * Get a shallow copy of all response header names.
  *
- * @return {object}
+ * @return {Headers}
  */
 ServerResponse.prototype.getHeaders = function getHeaders () {
   var clone = {}
@@ -136,6 +139,8 @@ ServerResponse.prototype.hasHeader = function hasHeader (header) {
 
 /**
  * Remove a header from the current ServerResponse.
+ *
+ * @return {void}
  */
 ServerResponse.prototype.removeHeader = function removeHeader (header) {
   delete this._headers[header.toLowerCase()]
@@ -154,7 +159,7 @@ ServerResponse.prototype.setHeader = function setHeader (header, value) {
 /**
  * Handle event ending from the current ServerResponse.
  *
- * @param {Buffer|ArrayBuffer|string[]} [chunk] - A chunk of data to write.
+ * @param {Chunk} [chunk] - A chunk of data to write.
  * @param {string} [encoding] - The encoding for the chunk.
  * @param {Function} [onFinish] - A function that will be called when the response has finished.
  */
@@ -198,11 +203,10 @@ ServerResponse.prototype.end = function end (chunk, encoding, onFinish) {
 /**
  * Creates a new server response and sets up some properties.
  *
- * @param {IncomingMessage} incomingMessage - The request that is assosiated with the response.
+ * @static
+ * @param {http.IncomingMessage} incomingMessage - The request that is assosiated with the response.
  * @return {ServerResponse}
  */
-function createServerResponse (incomingMessage) {
-  var serverResponse = new ServerResponse(incomingMessage)
-  serverResponse._body = []
-  return serverResponse
+ServerResponse._createServerResponse = function createServerResponse (incomingMessage) {
+  return new ServerResponse(incomingMessage)
 }
