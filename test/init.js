@@ -1,5 +1,9 @@
 'use strict'
 
+require('ts-node/register')
+require('source-map-support/register')
+require('jsdom-global')('<!doctype html><html><head><meta charset="utf-8"></head><body></body></html>', { url: 'http://localhost:3000' })
+
 // Polyfill fetch api and html5 history api.
 require('es6-promise/auto')
 require('isomorphic-fetch')

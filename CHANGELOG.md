@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 7.0.0 - 2017-10-13
+- Switch project to use TypeScript. (This allows code completion in VS Code!)
+- Some private API's were moved around but this should be non-breaking for most people.
+- Project now uses prettier for automatic formatting.
+- Update deps.
+
 ## 6.0.0 - 2017-10-10
 ### Changed
-- Removes and moves some hidden `_properties` from `IncomingMessage`. (Requires an update to @rill/static).
+- Removes and moves some hidden `_properties` from `IncomingMessage`. (Requires an update to @rill/body).
 - Better support for typescript with improved JSDoc.
 - Moves initialization of non-methods to the constructor instead of the prototype for server-response.
 - Update dev dependencies.

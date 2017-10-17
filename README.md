@@ -9,9 +9,9 @@
   <a href="https://nodejs.org/api/documentation.html#documentation_stability_index">
     <img src="https://img.shields.io/badge/stability-stable-brightgreen.svg?style=flat-square" alt="API stability"/>
   </a>
-  <!-- Standard -->
-  <a href="https://github.com/feross/standard">
-    <img src="https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat-square" alt="Standard"/>
+  <!-- TypeScript -->
+  <a href="http://typescriptlang.org">
+    <img src="https://img.shields.io/badge/%3C%2F%3E-typescript-blue.svg" alt="TypeScript"/>
   </a>
   <!-- NPM version -->
   <a href="https://npmjs.org/package/@rill/http">
