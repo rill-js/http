@@ -4,7 +4,7 @@
   "version": "7.0.0-rc.2",
   "author": "Dylan Piercey <pierceydylan@gmail.com>",
   "browser": {
-    "dist/server/index.js": "dist/client/index.js",
+    "./dist/server/index.js": "./dist/client/index.js",
     "events": "events-light"
   },
   "bugs": "https://github.com/rill-js/http/issues",
