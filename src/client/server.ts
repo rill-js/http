@@ -74,4 +74,11 @@ export class Server extends EventEmitter {
   public unref(): Server {
     return this;
   }
+
+  /**
+   * @description
+   * This is a noop in the browser.
+   */
+  // tslint:disable-next-line
+  public address(): void {}
 }

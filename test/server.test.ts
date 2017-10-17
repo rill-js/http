@@ -64,4 +64,11 @@ describe("Server", () => {
       assert.equal(server.unref(), server);
     });
   });
+
+  describe("#address", () => {
+    it("should return nothing", () => {
+      const server = new http.Server();
+      assert.equal(server.address(), undefined);
+    });
+  });
 });
