@@ -10,7 +10,7 @@ import { _createServerResponse, ServerResponse } from "../server-response";
 
 // @internal
 interface IDocumentServer extends Server {
-  _referrer: string | void;
+  _referrer: string;
   _initialize: boolean;
   _pending_load: any;
   _pending_refresh: any;
@@ -32,9 +32,8 @@ const { history, document } = window;
 export function attach(server: Server, initialize?: boolean): Server {
   const it = server as IDocumentServer;
   // Add browser specific hidden server vars.
-  it._referrer = document && document.referrer;
+  it._referrer = document.referrer;
   it._initialize = initialize !== false;
-  it._pending_refresh = null;
   // Setup link/form hijackers.
   it._onHistory = onHistory.bind(it);
   it._onSubmit = onSubmit.bind(it);
@@ -75,17 +74,14 @@ function onClosing(this: IDocumentServer): void {
  */
 function onRequest(req: IncomingMessage, res: ServerResponse): void {
   // Set referrer automatically.
-  const referrer =
+  req.headers.referer =
     req.headers.referer || (req.socket.server as IDocumentServer)._referrer;
-  if (referrer) {
-    req.headers.referer = referrer;
-  }
   // Trigger cleanup on request finish.
   res.once("finish", onFinish.bind(null, req, res));
 }
 
 /**
- * Handle completed requests by updating location, scroll, cookies, etc.
+ * Handle completed requests by updating location, cookies, etc.
  */
 function onFinish(req: IncomingMessage, res: ServerResponse): void {
   const options = req._options;
@@ -122,47 +118,21 @@ function onFinish(req: IncomingMessage, res: ServerResponse): void {
     );
   }
 
-  if (
-    // We don't do hash scrolling or a url update unless it is a GET request.
-    req.method !== "GET" ||
-    // We don't do hash scrolling or a url update on redirects.
-    res.getHeader("Location")
-  ) {
+  // Only update URL on non redirected GET requests.
+  if (req.method !== "GET" || res.getHeader("Location")) {
     return;
-  }
-
-  /*
-   * When navigating a user will be brought to the top of the page.
-   * If the urls contains a hash that is the id of an element (a target) then the target will be scrolled to.
-   * This is similar to how browsers handle page transitions natively.
-   */
-  /* istanbul ignore next */
-  if (options.scroll !== false) {
-    if (!parsed.hash) {
-      window.scrollTo(0, 0);
-    } else {
-      const target = document.getElementById(parsed.hash.slice(1));
-      /* istanbul ignore next */
-      if (target && target.scrollIntoView) {
-        target.scrollIntoView({
-          // Only use smooth scrolling if we are on the page already.
-          behavior:
-            location.pathname === parsed.pathname &&
-            (location.search || "") === (parsed.search || "")
-              ? "smooth"
-              : "auto",
-          block: "start"
-        });
-      }
-    }
   }
 
   // Don't push the same url twice.
-  if (req.headers.referer === parsed.href) {
+  /* istanbul ignore next */
+  if (server._referrer === parsed.href) {
     return;
-  } else {
-    server._referrer = parsed.href;
   }
+
+  // Save last url for referer header.
+  server._referrer = parsed.href;
+  // Scrolls to top of document (if we are on a new page).
+  window.scrollTo(0, 0);
 
   // Update the href in the browser.
   if (options.history !== false) {
@@ -173,8 +143,18 @@ function onFinish(req: IncomingMessage, res: ServerResponse): void {
 /**
  * Handles history state changes (back or startup) and pushes them through the server.
  */
-function onHistory(this: IDocumentServer): void {
-  fetch(this, { url: location.href, scroll: false, history: false });
+function onHistory(this: IDocumentServer, e?: Event): void {
+  // Skip hash only changes.
+  /* istanbul ignore next */
+  if (
+    e &&
+    location.hash &&
+    location.href.replace(this._referrer, "") === location.hash
+  ) {
+    return;
+  }
+
+  fetch(this, { url: location.href, history: false });
 }
 
 /**
@@ -208,10 +188,11 @@ function onSubmit(this: IDocumentServer, e: Event): void {
   e.preventDefault();
 
   // Submit the form to the server.
-  /* istanbul ignore next */
   fetch(this, {
     form: el,
-    method: el.method || (el.getAttribute("method") as string),
+    method:
+      el.method ||
+      /* istanbul ignore next */ (el.getAttribute("method") as string),
     url: action as string
   });
 
@@ -245,6 +226,10 @@ function onClick(this: IDocumentServer, e: MouseEvent): void {
     !el ||
     // Ignore clicks from linkless elements.
     !el.href ||
+    // Ignore only hash changes.
+    (el.hash &&
+      el.pathname === location.pathname &&
+      el.search === location.search) ||
     // Ignore the click if the element has a target.
     (el.target && el.target !== "_self") ||
     // Ignore 'rel="external"' links.
@@ -287,13 +272,13 @@ export function fetch(
   // Ensure url was a string.
   if (!options || typeof options.url !== "string") {
     return Promise.reject(
-      new TypeError("@rill/http/adapter/browser#fetch: url must be a string.")
+      new TypeError("@rill/http#fetch: url must be a string.")
     );
   }
 
   // Parse url parts into an object.
   let parsed = (options.parsed = parseURL(
-    options.url as string,
+    (options.url as string).replace(/#.*$/, ""), // Omit any hash from requested URL.
     location.href
   ));
 
@@ -307,17 +292,11 @@ export function fetch(
     // Handle special form option.
     if (form) {
       // Copy content type from form.
-      incomingMessage.headers["content-type"] =
-        form.enctype ||
-        /* istanbul ignore next */
-        form.getAttribute("enctype") ||
-        /* istanbul ignore next */
-        "application/x-www-form-urlencoded";
-
+      incomingMessage.headers["content-type"] = form.enctype;
       // Parse form data and override options.
-      const formData = parseForm(form);
-      options.body = formData.body;
-      options.files = formData.files;
+      const { body, files } = parseForm(form);
+      options.body = body;
+      options.files = files;
     }
 
     if (incomingMessage.method === "GET") {
@@ -325,7 +304,7 @@ export function fetch(
       const query = options.query || options.body;
       if (query) {
         parsed = options.parsed = parseURL(
-          parsed.pathname + "?" + stringifyQS(query, true) + parsed.hash,
+          parsed.pathname + "?" + stringifyQS(query, true),
           location.href
         );
       }
@@ -333,9 +312,7 @@ export function fetch(
 
     // Set the request url.
     incomingMessage.url =
-      (parsed.pathname as string) +
-      (parsed.search as string) +
-      (parsed.hash as string);
+      (parsed.pathname as string) + (parsed.search as string);
 
     // Wait for server response to be sent.
     serverResponse.once("finish", () => {
@@ -351,7 +328,6 @@ export function fetch(
           return resolve(
             fetch(server, {
               history: options.history,
-              scroll: options.scroll,
               url: String(redirect)
             })
           );

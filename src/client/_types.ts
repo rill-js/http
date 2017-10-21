@@ -32,7 +32,6 @@ export interface FetchOptions {
   query?: any;
   body?: any;
   files?: any;
-  scroll?: boolean;
   history?: boolean;
   redirect?: string;
   headers?: Headers;

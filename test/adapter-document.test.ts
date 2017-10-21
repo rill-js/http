@@ -169,8 +169,8 @@ describe("Adapter/Browser", () => {
       clickEl(el);
     });
 
-    it("should handle internal links with hashes", done => {
-      const testURL = "/test-internal-link#test";
+    it("should handle internal links with new paths and hashes", done => {
+      const testURL = "/test-internal-hash-link#test";
       const el = createEl("a", { href: testURL });
 
       once("click", el, e => {
@@ -182,15 +182,13 @@ describe("Adapter/Browser", () => {
       clickEl(el);
     });
 
-    it("should handle internal links with hashes (scroll to element)", done => {
-      const testURL = "/test-internal-link#test";
+    it("should ignore internal links with only a hash change", done => {
+      const testURL = "#test";
       const el = createEl("a", { href: testURL });
-      const div = createEl("div", { id: "test" });
 
       once("click", el, e => {
-        assert.ok(e.defaultPrevented);
+        assert.ok(!e.defaultPrevented);
         el.parentNode.removeChild(el);
-        div.parentNode.removeChild(div);
         done();
       });
 

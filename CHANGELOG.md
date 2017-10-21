@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## 7.0.0 - 2017-10-13
+- Changes to handling URLS with a `hash`.
+  * No longer intercept `hash` changes (allows for default browser action).
+  * No longer add `hash` to `req.url` or `req.headers.referer` for consistency with server side http.
+  * Removes built in smooth scrolling on urls with a `hash`.
 - Switch project to use TypeScript. (This allows code completion in VS Code!)
 - Some private API's were moved around but this should be non-breaking for most people.
 - Project now uses prettier for automatic formatting.

@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import * as STATUS_CODES from "statuses";
+import { STATUS_CODES } from "statuses";
 import * as T from "./_types";
 import { IncomingMessage } from "./incoming-message";
 

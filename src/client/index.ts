@@ -1,4 +1,4 @@
-import * as STATUS_CODES from "statuses";
+import { STATUS_CODES } from "statuses";
 import * as Types from "./_types";
 import { IncomingMessage } from "./incoming-message";
 import { Server } from "./server";
