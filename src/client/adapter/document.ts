@@ -228,8 +228,8 @@ function onClick(this: IDocumentServer, e: MouseEvent): void {
     !el.href ||
     // Ignore only hash changes.
     (el.hash &&
-      el.pathname === location.pathname &&
-      el.search === location.search) ||
+    (!el.pathname || el.pathname === location.pathname) && // Note `!el.pathname` check is for IE which doesn't parse this properly.
+      (!el.search || el.search === location.search)) ||
     // Ignore the click if the element has a target.
     (el.target && el.target !== "_self") ||
     // Ignore 'rel="external"' links.
