@@ -1,6 +1,9 @@
 import { EventEmitter } from "events";
+import { get as getWin } from "get-win";
 import * as T from "./_types";
 import { Server } from "./server";
+
+const { document, navigator } = getWin();
 
 export class IncomingMessage extends EventEmitter {
   public connection: T.Socket;

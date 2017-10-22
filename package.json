@@ -10,23 +10,22 @@
   "bugs": "https://github.com/rill-js/http/issues",
   "dependencies": {
     "events-light": "^1.0.5",
-    "get-loc": "^2.0.5",
+    "get-loc": "^2.0.6",
+    "get-win": "^1.0.1",
     "mini-querystring": "^2.0.6",
-    "mini-url": "^2.1.8",
+    "mini-url": "^2.1.9",
     "parse-form": "^4.0.5",
     "statuses": "^1.4.0",
-    "tslib": "^1.8.0",
-    "window-var": "^1.0.11"
+    "tslib": "^1.8.0"
   },
   "devDependencies": {
     "@types/es6-promise": "0.0.33",
     "@types/mocha": "^2.2.43",
     "@types/node": "^8.0.46",
-    "browserify": "^13.3.0",
+    "browserify": "^14.5.0",
     "coveralls": "^3.0.0",
     "easy-sauce": "^0.4.1",
     "es6-promise": "^4.1.1",
-    "html5-history-api": "^4.2.8",
     "husky": "^0.14.3",
     "isomorphic-fetch": "^2.2.1",
     "jsdom": "^11.3.0",

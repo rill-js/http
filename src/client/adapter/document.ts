@@ -1,8 +1,8 @@
 import { get as getLoc } from "get-loc";
+import { get as getWin } from "get-win";
 import { stringify as stringifyQS } from "mini-querystring";
 import { parse as parseURL } from "mini-url";
 import { parse as parseForm } from "parse-form";
-import { get as getWindow } from "window-var";
 import * as T from "../_types";
 import { _createIncomingMessage, IncomingMessage } from "../incoming-message";
 import { Server } from "../server";
@@ -19,7 +19,7 @@ interface IDocumentServer extends Server {
   _onClick: (this: Server) => any;
 }
 
-const window = getWindow();
+const window = getWin();
 const { history, document } = window;
 
 /**

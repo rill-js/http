@@ -1,7 +1,7 @@
 import * as assert from "assert";
 import { get as getLocation } from "get-loc";
+import { get as getWindow } from "get-win";
 import * as URL from "url";
-import { get as getWindow } from "window-var";
 import { _createIncomingMessage } from "../src/client/incoming-message";
 
 const window = getWindow();

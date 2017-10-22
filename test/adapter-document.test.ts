@@ -1,7 +1,10 @@
+import "es6-promise/auto";
+import "isomorphic-fetch";
+
 import * as assert from "assert";
 import { get as getLocation } from "get-loc";
+import { get as getWindow } from "get-win";
 import * as URL from "url";
-import { get as getWindow } from "window-var";
 
 import * as http from "../src/client";
 import { attach, fetch } from "../src/client/adapter/document";
@@ -11,6 +14,15 @@ const location = getLocation();
 const { Request } = global as any;
 const { history } = window;
 const diffProtocol = location.protocol === "https:" ? "http" : "https";
+
+// Patch jsdom.
+if (window !== global) {
+  // tslint:disable-next-line
+  window.scrollTo = () => {};
+  window.Headers = (global as any).Headers;
+  window.Request = (global as any).Request;
+  window.Response = (global as any).Response;
+}
 
 describe("Adapter/Browser", () => {
   const originalHref = location.href;
