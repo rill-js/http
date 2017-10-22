@@ -131,11 +131,11 @@ function onFinish(req: IncomingMessage, res: ServerResponse): void {
 
   // Save last url for referer header.
   server._referrer = parsed.href;
-  // Scrolls to top of document (if we are on a new page).
-  window.scrollTo(0, 0);
 
-  // Update the href in the browser.
   if (options.history !== false) {
+    // Scrolls to top of document (if we are on a new page).
+    window.scrollTo(0, 0);
+    // Update the href in the browser.
     history.pushState(null, document.title, req.url);
   }
 }

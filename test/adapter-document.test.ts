@@ -194,6 +194,19 @@ describe("Adapter/Browser", () => {
       clickEl(el);
     });
 
+    it("should handle internal links with new query and hashes", done => {
+      const testURL = "?x=1#test";
+      const el = createEl("a", { href: testURL });
+
+      once("click", el, e => {
+        assert.ok(e.defaultPrevented);
+        el.parentNode.removeChild(el);
+        done();
+      });
+
+      clickEl(el);
+    });
+
     it("should ignore internal links with only a hash change", done => {
       const testURL = "#test";
       const el = createEl("a", { href: testURL });
